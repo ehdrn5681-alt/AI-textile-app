@@ -12,7 +12,7 @@ import random
 # 0. 페이지 설정 & 랜덤 닉네임 초기화
 # ==============================================================================
 st.set_page_config(
-    page_title="구동현-TEX AI v3.11 | Demo Edition",
+    page_title="구동현-TEX AI v3.12 | Final Fix Edition",
     page_icon="⚡",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -116,7 +116,7 @@ st.markdown("""
         background: rgba(15, 23, 42, 0.98);
     }
 
-    label, .stFileUploader label, .stTextInput label, .stNumberInput label, .stSelectbox label, .stSlider label, p, span, div, h1, h2, h3, h4, h5, h6 {
+    label, .stFileUploader label, .stTextInput label, .stNumberInput label, .stSelectbox label, .stSlider label, p, span, div, h2, h3, h4, h5, h6 {
         color: #FFFFFF !important;
     }
     
@@ -297,11 +297,11 @@ with st.sidebar:
     )
 
 # ==============================================================================
-# 5. 상단 헤더 (Demo Version 뱃지 표기 포함) & 사용설명서
+# 5. 상단 헤더 (Markdown으로 타이틀 구현) & 사용설명서
 # ==============================================================================
 h_c1, h_c2 = st.columns([3.2, 1])
 with h_c1:
-    st.title("⚡ 구동현-TEX AI <span class='demo-badge'>DEMO VERSION</span>", unsafe_allow_html=True)
+    st.markdown("# ⚡ 구동현-TEX AI : 전 공정 통합 관제 OS <span class='demo-badge'>DEMO VERSION</span>", unsafe_allow_html=True)
 with h_c2:
     st.markdown(f"<div style='text-align:right; padding-top:16px;'><span class='live-badge'>🟢 LIVE {live_users}명 Online</span></div>", unsafe_allow_html=True)
 
@@ -709,6 +709,6 @@ elif selected_module == "6) 야드/롤 변환 & 물류 최적화":
         st.markdown("### 🚢 컨테이너 CBM 적재 최적화기")
         t_cm = st.number_input("지관 외경 (cm)", value=8.5, step=0.5)
         th_mm = st.number_input("원단 두께 (mm)", value=round(c_g / 320.0, 2), step=0.05)
-        cntr = selectbox_placeholder = st.selectbox("컨테이너", ["20ft Dry (28 CBM)", "40ft High Cube (68 CBM)"], index=1)
+        cntr = st.selectbox("컨테이너", ["20ft Dry (28 CBM)", "40ft High Cube (68 CBM)"], index=1)
         r_dia = round(math.sqrt(t_cm**2 + (4.0 * (t_yds*yds_kg*91.44) * (th_mm / 10.0)) / math.pi), 1)
         st.info(f"📐 1롤 예상 직경: `{r_dia} cm` | 40ft 컨테이너 최대 적재 수량 산출 완료")
