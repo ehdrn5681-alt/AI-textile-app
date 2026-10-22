@@ -11,7 +11,7 @@ import uuid
 # 0. 페이지 설정 & 실시간 접속자 및 AS 라이브 채팅 세션 초기화
 # ==============================================================================
 st.set_page_config(
-    page_title="구동현-TEX AI v3.4 | Ultimate Edition",
+    page_title="구동현-TEX AI v3.5 | UI Fix Edition",
     page_icon="⚡",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -84,13 +84,12 @@ FACTORY_MACHINES = [
 ]
 
 # ==============================================================================
-# 2. 가시성 보장 CSS (모든 본문 글씨 흰색 강제 + 채팅창 입력 글씨 검은색)
+# 2. UI 가시성 및 입력창 글씨 검은색 고정 CSS (채팅창 및 사진 업로드란 완벽 대응)
 # ==============================================================================
 st.markdown("""
 <style>
     .stApp { background-color: #090D16; color: #FFFFFF !important; }
     
-    /* 사이드바 가시성 및 배경 */
     section[data-testid="stSidebar"] {
         background-color: #0F172A !important;
         border-right: 1px solid #1E293B;
@@ -112,25 +111,30 @@ st.markdown("""
         background: rgba(15, 23, 42, 0.98);
     }
 
-    /* 모든 입력창, 레이블 글씨 선명한 흰색 강제 */
     label, .stFileUploader label, .stTextInput label, .stNumberInput label, .stSelectbox label, .stSlider label, p, span, div, h1, h2, h3, h4, h5, h6 {
         color: #FFFFFF !important;
     }
     
-    /* 메트릭(숫자 및 지표) 흐리멍텅한 글씨 완벽한 흰색으로 교체 */
     [data-testid="stMetricValue"], [data-testid="stMetricLabel"], [data-testid="stMetricDelta"] {
         color: #FFFFFF !important;
     }
 
-    /* 🔥 [핵심 수정] 채팅창 입력창 내부 텍스트 글씨 색상을 검은색(#000000)으로 강제 */
-    section[data-testid="stSidebar"] input {
+    /* 🔥 [핵심 수정 1] 앱 내 모든 텍스트 입력창(채팅창, 닉네임 등) 내부 글씨를 명확한 검은색(#000000)으로 강제 */
+    input, textarea, select {
         color: #000000 !important;
         background-color: #FFFFFF !important;
         font-weight: 700 !important;
     }
-
-    [data-testid="stFileUploader"] section small { color: #CBD5E1 !important; font-size: 0.9rem !important; }
     
+    /* 🔥 [핵심 수정 2] 사진 업로드 박스 내부 글씨 및 배경 가시성 확보 */
+    [data-testid="stFileUploader"] section {
+        background-color: #1E293B !important;
+        border: 2px dashed #38BDF8 !important;
+    }
+    [data-testid="stFileUploader"] section div, [data-testid="stFileUploader"] section span, [data-testid="stFileUploader"] section small {
+        color: #FFFFFF !important;
+    }
+
     .hero-card {
         background: linear-gradient(135deg, rgba(15,23,42,0.95) 0%, rgba(30,41,59,0.85) 100%);
         border: 1px solid rgba(0, 242, 254, 0.35);
@@ -212,7 +216,6 @@ with st.sidebar:
     st.markdown("## ⚡ 구동현-TEX AI")
     st.markdown(f'<div class="live-badge">🟢 접속 실무자: {live_users}명 (무료)</div>', unsafe_allow_html=True)
     
-    # ── [변경] A/S 라이브 채팅창을 접이식(Expander)으로 변경하여 좌측바 길이 압축 ──
     with st.expander("💬 A/S 라이브 CS 실시간 채팅실 열기"):
         chat_container = st.container()
         with chat_container:
@@ -229,7 +232,6 @@ with st.sidebar:
             if submitted and user_msg.strip():
                 st.session_state.as_chat_messages.append({"sender": user_sender, "text": user_msg.strip()})
                 st.rerun()
-    # ──────────────────────────────────────────────────────────────────────────
 
     st.write("---")
     st.markdown("### 🧭 공정 파이프라인 네비게이션")
@@ -256,7 +258,7 @@ with st.sidebar:
     )
 
 # ==============================================================================
-# 5. 상단 헤더 & 사용설명서 (브랜드명 변경 및 불필요한 문구 삭제)
+# 5. 상단 헤더 & 사용설명서
 # ==============================================================================
 h_c1, h_c2 = st.columns([3.2, 1])
 with h_c1:
