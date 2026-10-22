@@ -11,7 +11,7 @@ import uuid
 # 0. 페이지 설정 & 실시간 접속자 및 AS 라이브 채팅 세션 초기화
 # ==============================================================================
 st.set_page_config(
-    page_title="NEXUS-TEX AI v3.3 | AS Live CS Edition",
+    page_title="구동현-TEX AI v3.4 | Ultimate Edition",
     page_icon="⚡",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -34,20 +34,19 @@ def get_live_user_count():
 
 live_users = get_live_user_count()
 
-# AS 라이브 채팅방 초기 대화 내역 세션 설정
 if "as_chat_messages" not in st.session_state:
     st.session_state.as_chat_messages = [
         {"sender": "품질관리팀 김대리", "text": "3호기 텐터 가공분 수축률 -2.5%로 바이어 기준 통과했습니다."},
         {"sender": "영업부 박과장", "text": "수고하셨습니다! 바이어에게 영문 견적서(CBD) 쏜다 ㄱㄱ"},
-        {"sender": "공장장", "text": "스판덱스 플레이팅 장력 팽팽하게 유지해라. 파공 조심하고."}
+        {"sender": "구동현", "text": "다들 고생이많다. 스판덱스 장력 팽팽하게 잡아라."}
     ]
 
 # ==============================================================================
-# 1. 전역 세션 상태 초기화 (Front -> Tuck -> Back 순서 엄수)
+# 1. 전역 세션 상태 초기화
 # ==============================================================================
 defaults = {
     "fabric_name": "CVC 30s 싱글 스판 저지 (Single Span Jersey)",
-    "pattern_type": "Single Jersey (Front/Back)",
+    "pattern_type": "Single Jersey (Standard)",
     "struct_mode": "싱글 저지 (표준 100% 침수)",
     "yarn_origin": "베트남/국내산 코마사 (표준 축률)",
     "rec_inch": 30,
@@ -60,9 +59,9 @@ defaults = {
     "wpi": 38,
     "cpi": 52,
     "plating_factor": 0.70,
-    "y1_name": "CVC 30s/1 (Front 전면사)", "y1_count": 30.0, "y1_unit": "Ne(면번수)", "y1_feeds": 90, "y1_sl": 2.82, "y1_price": 3.40, "y1_draft": 1.0, "y1_share": 100.0,
-    "y2_name": "CM 30s/1 (Tuck 터크사)", "y2_count": 30.0, "y2_unit": "Ne(면번수)", "y2_feeds": 0, "y2_sl": 2.10, "y2_price": 3.50, "y2_draft": 1.0, "y2_share": 100.0,
-    "y3_name": "Cotton 20s/1 (Back 이면사)", "y3_count": 20.0, "y3_unit": "Ne(면번수)", "y3_feeds": 0, "y3_sl": 3.80, "y3_price": 3.10, "y3_draft": 1.0, "y3_share": 100.0,
+    "y1_name": "CVC 30s/1 (전면사 Face)", "y1_count": 30.0, "y1_unit": "Ne(면번수)", "y1_feeds": 90, "y1_sl": 2.82, "y1_price": 3.40, "y1_draft": 1.0, "y1_share": 100.0,
+    "y2_name": "Cotton 20s/1 (이면사 Back)", "y2_count": 20.0, "y2_unit": "Ne(면번수)", "y2_feeds": 0, "y2_sl": 3.80, "y2_price": 3.10, "y2_draft": 1.0, "y2_share": 100.0,
+    "y3_name": "폴리 75D (특수사)", "y3_count": 75.0, "y3_unit": "Denier(데니어)", "y3_feeds": 0, "y3_sl": 2.10, "y3_price": 1.85, "y3_draft": 1.0, "y3_share": 100.0,
     "y4_name": "Spandex 20D (스판덱스 1)", "y4_count": 20.0, "y4_unit": "Denier(데니어)", "y4_feeds": 90, "y4_sl": 2.82, "y4_price": 6.80, "y4_draft": 3.1, "y4_share": 100.0,
     "y5_name": "Spandex 40D (스판덱스 2)", "y5_count": 40.0, "y5_unit": "Denier(데니어)", "y5_feeds": 0, "y5_sl": 2.82, "y5_price": 6.20, "y5_draft": 3.2, "y5_share": 100.0,
     "calc_daily_kg": 248.0,
@@ -85,17 +84,19 @@ FACTORY_MACHINES = [
 ]
 
 # ==============================================================================
-# 2. 가시성 보장 CSS (흰색/네온 강제 고정)
+# 2. 가시성 보장 CSS (모든 본문 글씨 흰색 강제 + 채팅창 입력 글씨 검은색)
 # ==============================================================================
 st.markdown("""
 <style>
-    .stApp { background-color: #090D16; color: #F8FAFC; }
+    .stApp { background-color: #090D16; color: #FFFFFF !important; }
+    
+    /* 사이드바 가시성 및 배경 */
     section[data-testid="stSidebar"] {
         background-color: #0F172A !important;
         border-right: 1px solid #1E293B;
     }
     section[data-testid="stSidebar"] * {
-        color: #F8FAFC !important;
+        color: #FFFFFF !important;
         font-weight: 500;
     }
     div[role="radiogroup"] > label {
@@ -110,12 +111,26 @@ st.markdown("""
         border-color: #00F2FE;
         background: rgba(15, 23, 42, 0.98);
     }
-    label, .stFileUploader label, .stTextInput label, .stNumberInput label, .stSelectbox label, .stSlider label {
+
+    /* 모든 입력창, 레이블 글씨 선명한 흰색 강제 */
+    label, .stFileUploader label, .stTextInput label, .stNumberInput label, .stSelectbox label, .stSlider label, p, span, div, h1, h2, h3, h4, h5, h6 {
         color: #FFFFFF !important;
-        font-weight: 700 !important;
-        font-size: 1.02rem !important;
     }
-    [data-testid="stFileUploader"] section small { color: #94A3B8 !important; font-size: 0.9rem !important; }
+    
+    /* 메트릭(숫자 및 지표) 흐리멍텅한 글씨 완벽한 흰색으로 교체 */
+    [data-testid="stMetricValue"], [data-testid="stMetricLabel"], [data-testid="stMetricDelta"] {
+        color: #FFFFFF !important;
+    }
+
+    /* 🔥 [핵심 수정] 채팅창 입력창 내부 텍스트 글씨 색상을 검은색(#000000)으로 강제 */
+    section[data-testid="stSidebar"] input {
+        color: #000000 !important;
+        background-color: #FFFFFF !important;
+        font-weight: 700 !important;
+    }
+
+    [data-testid="stFileUploader"] section small { color: #CBD5E1 !important; font-size: 0.9rem !important; }
+    
     .hero-card {
         background: linear-gradient(135deg, rgba(15,23,42,0.95) 0%, rgba(30,41,59,0.85) 100%);
         border: 1px solid rgba(0, 242, 254, 0.35);
@@ -131,7 +146,7 @@ st.markdown("""
         padding: 16px 20px;
         margin-bottom: 14px;
     }
-    .neon-title { color: #38BDF8; font-weight: 800; font-size: 1.08rem; margin-bottom: 8px; }
+    .neon-title { color: #38BDF8 !important; font-weight: 800; font-size: 1.08rem; margin-bottom: 8px; }
     .live-badge {
         display: inline-block;
         background: rgba(16, 185, 129, 0.15);
@@ -148,20 +163,20 @@ st.markdown("""
         padding: 16px 20px;
         border-radius: 10px;
         font-size: 1.0rem;
-        color: #F8FAFC;
+        color: #FFFFFF !important;
         margin-top: 8px;
         line-height: 1.8;
     }
-    /* A/S 라이브 채팅창 박스 전용 스타일 */
     .as-chat-box {
         background: #0B0F19;
         border: 1px solid #1E293B;
         border-radius: 10px;
         padding: 10px;
-        max-height: 220px;
+        max-height: 200px;
         overflow-y: auto;
         font-size: 0.82rem;
         margin-bottom: 8px;
+        color: #FFFFFF !important;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -191,34 +206,29 @@ def analyze_swatch_pixels(front_img_file, back_img_file):
         return {"analyzed": False}
 
 # ==============================================================================
-# 4. 좌측 사이드바 네비게이션 & A/S 라이브 CS 채팅창 (실시간 접속자 밑 배치)
+# 4. 좌측 사이드바 네비게이션 & 접이식 A/S 라이브 채팅창
 # ==============================================================================
 with st.sidebar:
-    st.markdown("## ⚡ NEXUS-TEX AI")
-    st.caption("Front-Tuck-Back Pipeline")
+    st.markdown("## ⚡ 구동현-TEX AI")
     st.markdown(f'<div class="live-badge">🟢 접속 실무자: {live_users}명 (무료)</div>', unsafe_allow_html=True)
     
-    # ── [신규 추가] A/S 라이브 CS 실무 채팅창 ──────────────────────────────────
-    st.markdown("---")
-    st.markdown("💬 **A/S 라이브 CS 실시간 채팅실**")
-    
-    # 채팅 내역 렌더링 영역
-    chat_container = st.container()
-    with chat_container:
-        chat_html = "<div class='as-chat-box'>"
-        for msg in st.session_state.as_chat_messages:
-            chat_html += f"<div style='margin-bottom:6px;'><b>{msg['sender']}</b>: {msg['text']}</div>"
-        chat_html += "</div>"
-        st.markdown(chat_html, unsafe_allow_html=True)
+    # ── [변경] A/S 라이브 채팅창을 접이식(Expander)으로 변경하여 좌측바 길이 압축 ──
+    with st.expander("💬 A/S 라이브 CS 실시간 채팅실 열기"):
+        chat_container = st.container()
+        with chat_container:
+            chat_html = "<div class='as-chat-box'>"
+            for msg in st.session_state.as_chat_messages:
+                chat_html += f"<div style='margin-bottom:6px;'><b>{msg['sender']}</b>: {msg['text']}</div>"
+            chat_html += "</div>"
+            st.markdown(chat_html, unsafe_allow_html=True)
 
-    # 채팅 입력 Form (엔터 또는 버튼 누르면 실시간 추가)
-    with st.form(key="as_chat_form", clear_on_submit=True):
-        user_sender = st.text_input("닉네임/직책", value="공장 실무자", label_visibility="collapsed")
-        user_msg = st.text_input("CS/AS 문의 입력...", placeholder="메시지 입력...", label_visibility="collapsed")
-        submitted = st.form_submit_button("전송 🚀", use_container_width=True)
-        if submitted and user_msg.strip():
-            st.session_state.as_chat_messages.append({"sender": user_sender, "text": user_msg.strip()})
-            st.rerun()
+        with st.form(key="as_chat_form", clear_on_submit=True):
+            user_sender = st.text_input("닉네임/직책", value="구동현", label_visibility="collapsed")
+            user_msg = st.text_input("CS/AS 문의 입력...", placeholder="메시지 입력...", label_visibility="collapsed")
+            submitted = st.form_submit_button("전송 🚀", use_container_width=True)
+            if submitted and user_msg.strip():
+                st.session_state.as_chat_messages.append({"sender": user_sender, "text": user_msg.strip()})
+                st.rerun()
     # ──────────────────────────────────────────────────────────────────────────
 
     st.write("---")
@@ -246,20 +256,20 @@ with st.sidebar:
     )
 
 # ==============================================================================
-# 5. 상단 헤더 & 사용설명서
+# 5. 상단 헤더 & 사용설명서 (브랜드명 변경 및 불필요한 문구 삭제)
 # ==============================================================================
 h_c1, h_c2 = st.columns([3.2, 1])
 with h_c1:
-    st.title("⚡ NEXUS-TEX AI : 전 공정 통합 관제 OS")
+    st.title("⚡ 구동현-TEX AI : 전 공정 통합 관제 OS")
 with h_c2:
     st.markdown(f"<div style='text-align:right; padding-top:16px;'><span class='live-badge'>🟢 LIVE {live_users}명 Online</span></div>", unsafe_allow_html=True)
 
-with st.expander("📖 [사용설명서] Front(전면) ➔ Tuck(터크) ➔ Back(이면) 순서 기준 가이드"):
+with st.expander("📖 [사용설명서] 전 공정 통합 관제 OS 가이드"):
     st.markdown("""
-    * **1) 스와치 사진 분석 & 역설계:** 앞/뒷면 사진을 올리고 버튼을 누르면 전면사-터크사-이면사 순서로 스펙이 도출됩니다.
-    * **2) 5-사종 혼용률 & 재고 구출:** Front, Tuck, Back, Span1, Span2 순서로 정밀 투입 비율을 관리합니다.
+    * **1) 스와치 사진 분석 & 역설계:** 앞/뒷면 사진을 올리고 버튼을 누르면 편직 스펙과 생지 타겟이 자동 도출됩니다.
+    * **2) 5-사종 혼용률 & 재고 구출:** 최대 5개 사종의 투입 비율과 창고 악성 재고 원사 구출을 관리합니다.
     * **3) 염색 바치 & 텐터 열고정:** 1욕/2욕 경로 선택, 케틀 미니멈 차지 방어, 텐터 온도/속도를 제어합니다.
-    * **4) 화학가공 & 콤팩터 제어:** 유연제 픽업률, 조제 원가, 콤팩터 압축 텐션을 다룹니다.
+    * **4) 화학가공 & 콤팩터 제어:** 유연제 픽업률, 조제 원가, 수축률을 잡는 콤팩터 압축을 다룹니다.
     * **5) 납기 원가 관제탑 & 불량레이더:** 풀 파이프라인 원가, 사스왑 네고, 공정별 불량 레이더를 확인합니다.
     * **6) 야드/롤 변환 & 물류 최적화:** 물류 출고 환산, 광폭 마카 손익, 컨테이너 CBM 적재를 끝냅니다.
     """)
@@ -270,7 +280,7 @@ st.write("---")
 # MODULE 1: 스와치 사진 분석 & 역설계
 # ==============================================================================
 if selected_module == "1) 스와치 사진 분석 & 역설계":
-    st.subheader("🔍 1) 스와치 사진 분석 & AI Vision 역설계 (Front ➔ Tuck ➔ Back 순서)")
+    st.subheader("🔍 1) 스와치 사진 분석 & AI Vision 역설계")
 
     st.markdown('<div class="hero-card">', unsafe_allow_html=True)
     u1, u2, u3 = st.columns([1, 1, 1.3])
@@ -287,9 +297,9 @@ if selected_module == "1) 스와치 사진 분석 & 역설계":
         preset_type = st.selectbox(
             "원단 베이스 조직 카테고리",
             [
-                "CVC 30s 싱글 스판 저지 (Single Span - Front/Back)",
-                "Cotton 30s/20s 2단 터크 미니 쭈리 (French Terry - Front/Tuck/Back)",
-                "CM 30s 싱글 피케 (Single Pique - Front/Tuck)",
+                "CVC 30s 싱글 스판 저지 (Single Span)",
+                "Cotton 30s/20s 2단 터크 미니 쭈리 (French Terry)",
+                "CM 30s 싱글 피케 (Single Pique)",
                 "CM 20s 2x2 립 스판 (2x2 Rib)",
                 "Poly 75D/Span 40D 고밀도 인터록 (Interlock)"
             ]
@@ -318,53 +328,53 @@ if selected_module == "1) 스와치 사진 분석 & 역설계":
 
     if "싱글 스판" in preset_type:
         p = {
-            "name": "CVC 30s 싱글 스판 저지", "pattern": "Single Jersey (Front/Back)", "struct": "싱글 저지", 
+            "name": "CVC 30s 싱글 스판 저지", "pattern": "Single Jersey", "struct": "싱글 저지", 
             "inch": 30, "gauge": 28, "feeds": 90, "rpm": 22, "type": "Single", "needle_mult": 1.0, 
             "wpi": 38, "cpi": 52, "sl": 2.82, "draft": 3.1, "w_shrink": 12.0 + origin_shrink_mod, "l_shrink": 10.5 + origin_shrink_mod, "fee": 0.35, "span_pct": 5.1, 
-            "y1": ("CVC 30s/1 (Front 전면사)", 30.0, "Ne(면번수)", 90, 2.82, 3.40, 1.0, 100.0), 
-            "y2": ("미사용 (Tuck 터크사)", 30.0, "Ne(면번수)", 0, 2.00, 3.50, 1.0, 100.0), 
-            "y3": ("미사용 (Back 이면사)", 20.0, "Ne(면번수)", 0, 3.50, 3.10, 1.0, 100.0), 
+            "y1": ("CVC 30s/1 (전면사)", 30.0, "Ne(면번수)", 90, 2.82, 3.40, 1.0, 100.0), 
+            "y2": ("Cotton 20s/1 (이면사)", 20.0, "Ne(면번수)", 0, 3.50, 3.10, 1.0, 100.0), 
+            "y3": ("폴리 75D (특수사)", 75.0, "Denier(데니어)", 0, 2.10, 1.85, 1.0, 100.0), 
             "y4": ("Spandex 20D (스판덱스 1)", 20.0, "Denier(데니어)", 90, 2.82, 6.80, 3.1, 100.0)
         }
     elif "미니 쭈리" in preset_type:
         p = {
-            "name": "Cotton 30s/20s 2단 미니 쭈리", "pattern": "2-Thread French Terry (Front/Tuck/Back)", "struct": "싱글 변형", 
+            "name": "Cotton 30s/20s 2단 미니 쭈리", "pattern": "2-Thread French Terry", "struct": "싱글 변형", 
             "inch": 30, "gauge": 24, "feeds": 72, "rpm": 18, "type": "Fleece", "needle_mult": 1.0, 
             "wpi": 30, "cpi": 40, "sl": 3.05, "draft": 3.0, "w_shrink": 14.5 + origin_shrink_mod, "l_shrink": 13.0 + origin_shrink_mod, "fee": 0.45, "span_pct": 3.8, 
-            "y1": ("CM 30s/1 (Front 전면사)", 30.0, "Ne(면번수)", 36, 3.05, 3.60, 1.0, 100.0), 
-            "y2": ("CM 30s/1 (Tuck 터크결합사)", 30.0, "Ne(면번수)", 18, 2.15, 3.60, 1.0, 100.0), 
-            "y3": ("CM 20s/1 (Back 이면루프사)", 20.0, "Ne(면번수)", 18, 4.20, 3.15, 1.0, 100.0), 
+            "y1": ("CM 30s/1 (전면사)", 30.0, "Ne(면번수)", 36, 3.05, 3.60, 1.0, 100.0), 
+            "y2": ("CM 20s/1 (이면사)", 20.0, "Ne(면번수)", 18, 4.20, 3.15, 1.0, 100.0), 
+            "y3": ("폴리 75D (특수사)", 75.0, "Denier(데니어)", 18, 2.15, 1.85, 1.0, 100.0), 
             "y4": ("Spandex 20D (스판덱스 1)", 20.0, "Denier(데니어)", 36, 3.05, 6.80, 3.0, 100.0)
         }
     elif "피케" in preset_type:
         p = {
-            "name": "CM 30s 싱글 피케", "pattern": "4-Track Pique (Front/Tuck)", "struct": "싱글 변형", 
+            "name": "CM 30s 싱글 피케", "pattern": "4-Track Pique", "struct": "싱글 변형", 
             "inch": 30, "gauge": 24, "feeds": 72, "rpm": 19, "type": "Single", "needle_mult": 1.0, 
             "wpi": 32, "cpi": 44, "sl": 2.95, "draft": 1.0, "w_shrink": 15.0 + origin_shrink_mod, "l_shrink": 12.0 + origin_shrink_mod, "fee": 0.42, "span_pct": 0.0, 
-            "y1": ("CM 30s/1 (Front 니트코어사)", 30.0, "Ne(면번수)", 36, 2.95, 3.60, 1.0, 100.0), 
-            "y2": ("CM 30s/1 (Tuck 요철터크사)", 30.0, "Ne(면번수)", 36, 2.45, 3.60, 1.0, 100.0), 
-            "y3": ("미사용 (Back 이면사)", 20.0, "Ne(면번수)", 0, 3.00, 3.10, 1.0, 100.0), 
-            "y4": ("미사용 (스판덱스 1)", 20.0, "Denier(데니어)", 0, 2.80, 6.80, 3.0, 100.0)
+            "y1": ("CM 30s/1 (전면사)", 30.0, "Ne(면번수)", 36, 2.95, 3.60, 1.0, 100.0), 
+            "y2": ("CM 20s/1 (이면사)", 20.0, "Ne(면번수)", 0, 3.00, 3.10, 1.0, 100.0), 
+            "y3": ("폴리 75D (특수사)", 75.0, "Denier(데니어)", 36, 2.45, 1.85, 1.0, 100.0), 
+            "y4": ("미사용", 20.0, "Denier(데니어)", 0, 2.80, 6.80, 3.0, 100.0)
         }
     elif "2x2 립" in preset_type:
         p = {
             "name": "CM 20s 2x2 립 스판", "pattern": "2x2 Rib", "struct": "2x2 립 (바늘빼기)", 
             "inch": 30, "gauge": 18, "feeds": 60, "rpm": 17, "type": "Double", "needle_mult": 1.333, 
             "wpi": 26, "cpi": 36, "sl": 3.25, "draft": 3.0, "w_shrink": 18.0 + origin_shrink_mod, "l_shrink": 11.0 + origin_shrink_mod, "fee": 0.48, "span_pct": 4.9, 
-            "y1": ("CM 20s/1 (Front 실린더/다이얼)", 20.0, "Ne(면번수)", 60, 3.25, 3.30, 1.0, 100.0), 
-            "y2": ("미사용 (Tuck 터크사)", 20.0, "Ne(면번수)", 0, 2.00, 3.10, 1.0, 100.0), 
-            "y3": ("미사용 (Back 이면사)", 20.0, "Ne(면번수)", 0, 3.00, 3.10, 1.0, 100.0), 
-            "y4": ("Spandex 30D (스판덱스 1)", 30.0, "Denier(데니어)", 60, 3.25, 6.50, 3.0, 100.0)
+            "y1": ("CM 20s/1 (실린더사)", 20.0, "Ne(면번수)", 60, 3.25, 3.30, 1.0, 100.0), 
+            "y2": ("미사용", 20.0, "Ne(면번수)", 0, 3.00, 3.10, 1.0, 100.0), 
+            "y3": ("미사용", 75.0, "Denier(데니어)", 0, 2.00, 1.85, 1.0, 100.0), 
+            "y4": ("Spandex 30D", 30.0, "Denier(데니어)", 60, 3.25, 6.50, 3.0, 100.0)
         }
     else:
         p = {
             "name": "Poly 75D/Span 인터록", "pattern": "1x1 Interlock", "struct": "양면 인터록", 
             "inch": 32, "gauge": 32, "feeds": 96, "rpm": 19, "type": "Double", "needle_mult": 2.0, 
             "wpi": 46, "cpi": 62, "sl": 2.45, "draft": 3.2, "w_shrink": 9.0 + origin_shrink_mod, "l_shrink": 8.0 + origin_shrink_mod, "fee": 0.58, "span_pct": 8.4, 
-            "y1": ("Poly 75D (Front 실린더사)", 75.0, "Denier(데니어)", 48, 2.45, 1.95, 1.0, 100.0), 
-            "y2": ("미사용 (Tuck 터크사)", 75.0, "Denier(데니어)", 0, 2.00, 1.95, 1.0, 100.0), 
-            "y3": ("Poly 75D (Back 다이얼사)", 75.0, "Denier(데니어)", 48, 2.45, 1.95, 1.0, 100.0), 
-            "y4": ("Spandex 40D (스판덱스 1)", 40.0, "Denier(데니어)", 96, 2.45, 6.20, 3.2, 100.0)
+            "y1": ("Poly 75D (실린더사)", 75.0, "Denier(데니어)", 48, 2.45, 1.95, 1.0, 100.0), 
+            "y2": ("Poly 75D (다이얼사)", 75.0, "Denier(데니어)", 48, 2.45, 1.95, 1.0, 100.0), 
+            "y3": ("미사용", 75.0, "Denier(데니어)", 0, 2.00, 1.85, 1.0, 100.0), 
+            "y4": ("Spandex 40D", 40.0, "Denier(데니어)", 96, 2.45, 6.20, 3.2, 100.0)
         }
 
     if pixel_res["analyzed"]:
@@ -380,7 +390,7 @@ if selected_module == "1) 스와치 사진 분석 & 역설계":
     daily_p = round(((active_n * (p["sl"] / 100.0) * p["feeds"] * main_tex / 1_000_000.0) * p["rpm"] * 60 * 24 * 0.85) / 1000.0, 1)
     knit_d = round(in_order_kg / max(daily_p, 1), 1)
 
-    if st.button("🚀 원클릭 AI 역설계 확정 & 전 공정 데이터 자동 이관 (Front➔Tuck➔Back)", type="primary", use_container_width=True):
+    if st.button("🚀 원클릭 AI 역설계 확정 & 전 공정 데이터 자동 이관", type="primary", use_container_width=True):
         st.session_state.fabric_name = p["name"]
         st.session_state.pattern_type = p["pattern"]
         st.session_state.struct_mode = p["struct"]
@@ -407,7 +417,7 @@ if selected_module == "1) 스와치 사진 분석 & 역설계":
             st.session_state[f"y{idx}_price"] = tup[5]
             st.session_state[f"y{idx}_draft"] = tup[6]
             st.session_state[f"y{idx}_share"] = tup[7]
-        st.success("✅ 역설계 완료! Front-Tuck-Back 순서로 모든 파이프라인 데이터가 동기화되었습니다.")
+        st.success("✅ 역설계 완료! 모든 파이프라인 데이터가 동기화되었습니다.")
 
     k1, k2, k3, k4 = st.columns(4)
     k1.metric("추천 설비 / 실가동 침수", f"{p['inch']}\" × {p['gauge']}G", f"실가동 {active_n:,}침")
@@ -420,7 +430,7 @@ if selected_module == "1) 스와치 사진 분석 & 역설계":
 # MODULE 2: 5-사종 혼용률 & 재고 구출
 # ==============================================================================
 elif selected_module == "2) 5-사종 혼용률 & 재고 구출":
-    st.subheader("⚙️ 2) 5-사종 정밀 혼용률 제너레이터 (Front ➔ Tuck ➔ Back 순서)")
+    st.subheader("⚙️ 2) 5-사종 정밀 혼용률 제너레이터")
 
     st.markdown('<div class="hero-card">', unsafe_allow_html=True)
     t1, t2, t3 = st.columns(3)
@@ -433,7 +443,7 @@ elif selected_module == "2) 5-사종 혼용률 & 재고 구출":
         m_eff = st.slider("실가동 효율 (%)", 65, 95, 85, 1)
     st.markdown('</div>', unsafe_allow_html=True)
 
-    with st.expander("🎛️ [전문가 서랍] Front(전면) ➔ Tuck(터크) ➔ Back(이면) 순서 5-사종 스펙 수동 조정"):
+    with st.expander("🎛️ [전문가 서랍] 5-사종 개별 스펙 수동 조정"):
         sc1, sc2, sc3 = st.columns(3)
         with sc1:
             st.session_state.rec_inch = st.number_input("기계 직경 (Inch)", value=int(st.session_state.rec_inch), step=2)
@@ -442,13 +452,7 @@ elif selected_module == "2) 5-사종 혼용률 & 재고 구출":
         with sc3:
             st.session_state.rec_rpm = st.number_input("가동 RPM", value=int(st.session_state.rec_rpm), step=1)
 
-        slot_labels = [
-            "사종 1 (Front 전면사)", 
-            "사종 2 (Tuck 터크사)", 
-            "사종 3 (Back 이면사)", 
-            "사종 4 (스판덱스 1)", 
-            "사종 5 (스판덱스 2)"
-        ]
+        slot_labels = ["사종 1 (전면사)", "사종 2 (이면사)", "사종 3 (특수사)", "사종 4 (스판덱스 1)", "사종 5 (스판덱스 2)"]
         y_cols = st.columns(5)
         for i in range(1, 6):
             with y_cols[i - 1]:
@@ -501,7 +505,7 @@ elif selected_module == "2) 5-사종 혼용률 & 재고 구출":
         with cl:
             active_y = [y for y in yarn_list if y["feeds"] > 0]
             fig = go.Figure(data=[go.Pie(labels=[y["name"] for y in active_y], values=[y["pct"] for y in active_y], hole=0.55, textinfo="label+percent")])
-            fig.update_layout(paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)", font=dict(color="#F8FAFC", size=13), margin=dict(t=30, b=10, l=10, r=10), height=300)
+            fig.update_layout(paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)", font=dict(color="#FFFFFF", size=13), margin=dict(t=30, b=10, l=10, r=10), height=300)
             st.plotly_chart(fig, use_container_width=True)
             st.markdown(f"<div class='yarn-summary-box'>{'<br>'.join(sum_lines)}</div>", unsafe_allow_html=True)
         with cr:
