@@ -9,10 +9,10 @@ import uuid
 import random
 
 # ==============================================================================
-# 0. 페이지 설정 & 랜덤 닉네임 알고리즘 & 영구 채팅 세션 초기화
+# 0. 페이지 설정 & 랜덤 닉네임 초기화 (수정 가능하도록 세션 분리)
 # ==============================================================================
 st.set_page_config(
-    page_title="구동현-TEX AI v3.8 | Notice Edition",
+    page_title="구동현-TEX AI v3.9 | Editable Nickname Edition",
     page_icon="⚡",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -39,10 +39,11 @@ def get_live_user_count():
 
 live_users = get_live_user_count()
 
-if "random_nickname" not in st.session_state:
+# 최초 접속 시에만 랜덤 형용사+동물 닉네임 부여, 이후엔 세션에 유지되어 수정 가능
+if "user_nickname" not in st.session_state:
     adjectives = ["용감한", "재빠른", "꼼꼼한", "냉철한", "노련한", "열정적인", "날카로운", "든든한", "민첩한", "특급"]
     animals = ["호랑이", "사자", "독수리", "표범", "늑대", "상어", "매", "곰", "고슴도치", "판다"]
-    st.session_state.random_nickname = f"{random.choice(adjectives)} {random.choice(animals)}"
+    st.session_state.user_nickname = f"{random.choice(adjectives)} {random.choice(animals)}"
 
 global_chat_messages = get_global_chat_history()
 
@@ -164,7 +165,6 @@ st.markdown("""
         font-size: 0.85rem;
         font-weight: 700;
     }
-    /* 종료 공지 뱃지 스타일 */
     .notice-badge {
         display: inline-block;
         background: rgba(239, 68, 68, 0.15);
@@ -225,10 +225,9 @@ def analyze_swatch_pixels(front_img_file, back_img_file):
         return {"analyzed": False}
 
 # ==============================================================================
-# 4. 좌측 사이드바 네비게이션 & 좌측 상단 종료 공지 뱃지 배치
+# 4. 좌측 사이드바 네비게이션 & 수정 가능한 닉네임 채팅창
 # ==============================================================================
 with st.sidebar:
-    # 🔥 [요청 반영] 좌측 상단에 10/24 서비스 종료 예정 뱃지 삽입
     st.markdown('<div class="notice-badge">🚨 10/24 서비스 종료 예정</div>', unsafe_allow_html=True)
     
     st.markdown("## ⚡ 구동현-TEX AI")
@@ -247,11 +246,14 @@ with st.sidebar:
             st.markdown(chat_html, unsafe_allow_html=True)
 
         with st.form(key="as_chat_form", clear_on_submit=True):
-            user_sender = st.text_input("닉네임", value=st.session_state.random_nickname, disabled=True)
+            # 🔥 [요청 반영] 닉네임을 사용자가 직접 수정할 수 있도록 disabled 해제 및 세션 연동
+            user_sender = st.text_input("닉네임", value=st.session_state.user_nickname)
             user_msg = st.text_input("CS/AS 문의 입력...", placeholder="메시지 입력...", label_visibility="collapsed")
             submitted = st.form_submit_button("전송 🚀", use_container_width=True)
             if submitted and user_msg.strip():
-                global_chat_messages.append({"sender": user_sender, "text": user_msg.strip()})
+                # 입력한 닉네임 상태를 세션에 저장하여 계속 유지되도록 함
+                st.session_state.user_nickname = user_sender.strip() if user_sender.strip() else "익명 실무자"
+                global_chat_messages.append({"sender": st.session_state.user_nickname, "text": user_msg.strip()})
                 st.rerun()
 
     st.write("---")
