@@ -6,12 +6,13 @@ from PIL import Image
 import math
 import time
 import uuid
+import random
 
 # ==============================================================================
-# 0. 페이지 설정 & 실시간 접속자 및 AS 라이브 채팅 세션 초기화
+# 0. 페이지 설정 & 랜덤 닉네임 알고리즘 & 영구 채팅 세션 초기화
 # ==============================================================================
 st.set_page_config(
-    page_title="구동현-TEX AI v3.6 | Final Edition",
+    page_title="구동현-TEX AI v3.8 | Notice Edition",
     page_icon="⚡",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -20,6 +21,10 @@ st.set_page_config(
 @st.cache_resource
 def get_active_sessions():
     return {}
+
+@st.cache_resource
+def get_global_chat_history():
+    return []
 
 def get_live_user_count():
     if "session_id" not in st.session_state:
@@ -34,12 +39,12 @@ def get_live_user_count():
 
 live_users = get_live_user_count()
 
-if "as_chat_messages" not in st.session_state:
-    st.session_state.as_chat_messages = [
-        {"sender": "품질관리팀 김대리", "text": "3호기 텐터 가공분 수축률 -2.5%로 바이어 기준 통과했습니다."},
-        {"sender": "영업부 박과장", "text": "수고하셨습니다! 바이어에게 영문 견적서(CBD) 쏜다 ㄱㄱ"},
-        {"sender": "구동현", "text": "다들 고생이많다. 스판덱스 장력 팽팽하게 잡아라."}
-    ]
+if "random_nickname" not in st.session_state:
+    adjectives = ["용감한", "재빠른", "꼼꼼한", "냉철한", "노련한", "열정적인", "날카로운", "든든한", "민첩한", "특급"]
+    animals = ["호랑이", "사자", "독수리", "표범", "늑대", "상어", "매", "곰", "고슴도치", "판다"]
+    st.session_state.random_nickname = f"{random.choice(adjectives)} {random.choice(animals)}"
+
+global_chat_messages = get_global_chat_history()
 
 # ==============================================================================
 # 1. 전역 세션 상태 초기화
@@ -84,7 +89,7 @@ FACTORY_MACHINES = [
 ]
 
 # ==============================================================================
-# 2. UI 가시성 및 입력창 세부 교정 CSS (버튼 가시성 및 텍스트 충돌 완벽 해결)
+# 2. UI 가시성 및 입력창 세부 교정 CSS
 # ==============================================================================
 st.markdown("""
 <style>
@@ -119,14 +124,12 @@ st.markdown("""
         color: #FFFFFF !important;
     }
 
-    /* 텍스트 입력창(채팅창, 닉네임)만 글씨를 검은색으로 고정 */
     section[data-testid="stSidebar"] input {
         color: #000000 !important;
         background-color: #FFFFFF !important;
         font-weight: 700 !important;
     }
 
-    /* 사진 업로드 박스 디자인 정돈 */
     [data-testid="stFileUploader"] section {
         background-color: #1E293B !important;
         border: 2px dashed #38BDF8 !important;
@@ -160,6 +163,18 @@ st.markdown("""
         border-radius: 999px;
         font-size: 0.85rem;
         font-weight: 700;
+    }
+    /* 종료 공지 뱃지 스타일 */
+    .notice-badge {
+        display: inline-block;
+        background: rgba(239, 68, 68, 0.15);
+        border: 1px solid #EF4444;
+        color: #F87171 !important;
+        padding: 6px 14px;
+        border-radius: 999px;
+        font-size: 0.85rem;
+        font-weight: 700;
+        margin-bottom: 10px;
     }
     .yarn-summary-box {
         background: #0F172A;
@@ -210,9 +225,12 @@ def analyze_swatch_pixels(front_img_file, back_img_file):
         return {"analyzed": False}
 
 # ==============================================================================
-# 4. 좌측 사이드바 네비게이션 & 접이식 A/S 라이브 채팅창
+# 4. 좌측 사이드바 네비게이션 & 좌측 상단 종료 공지 뱃지 배치
 # ==============================================================================
 with st.sidebar:
+    # 🔥 [요청 반영] 좌측 상단에 10/24 서비스 종료 예정 뱃지 삽입
+    st.markdown('<div class="notice-badge">🚨 10/24 서비스 종료 예정</div>', unsafe_allow_html=True)
+    
     st.markdown("## ⚡ 구동현-TEX AI")
     st.markdown(f'<div class="live-badge">🟢 접속 실무자: {live_users}명 (무료)</div>', unsafe_allow_html=True)
     
@@ -220,17 +238,20 @@ with st.sidebar:
         chat_container = st.container()
         with chat_container:
             chat_html = "<div class='as-chat-box'>"
-            for msg in st.session_state.as_chat_messages:
-                chat_html += f"<div style='margin-bottom:6px;'><b>{msg['sender']}</b>: {msg['text']}</div>"
+            if not global_chat_messages:
+                chat_html += "<div style='color: #94A3B8; text-align: center;'>등록된 메시지가 없습니다. 첫 대화를 시작해보세요!</div>"
+            else:
+                for msg in global_chat_messages:
+                    chat_html += f"<div style='margin-bottom:6px;'><b>{msg['sender']}</b>: {msg['text']}</div>"
             chat_html += "</div>"
             st.markdown(chat_html, unsafe_allow_html=True)
 
         with st.form(key="as_chat_form", clear_on_submit=True):
-            user_sender = st.text_input("닉네임/직책", value="구동현", label_visibility="collapsed")
+            user_sender = st.text_input("닉네임", value=st.session_state.random_nickname, disabled=True)
             user_msg = st.text_input("CS/AS 문의 입력...", placeholder="메시지 입력...", label_visibility="collapsed")
             submitted = st.form_submit_button("전송 🚀", use_container_width=True)
             if submitted and user_msg.strip():
-                st.session_state.as_chat_messages.append({"sender": user_sender, "text": user_msg.strip()})
+                global_chat_messages.append({"sender": user_sender, "text": user_msg.strip()})
                 st.rerun()
 
     st.write("---")
