@@ -8,10 +8,10 @@ import time
 import uuid
 
 # ==============================================================================
-# 0. 페이지 설정 & 실시간 접속자 트래커 (토큰 비용 $0)
+# 0. 페이지 설정 & 실시간 접속자 및 AS 라이브 채팅 세션 초기화
 # ==============================================================================
 st.set_page_config(
-    page_title="NEXUS-TEX AI v3.2 | Front-Tuck-Back Edition",
+    page_title="NEXUS-TEX AI v3.3 | AS Live CS Edition",
     page_icon="⚡",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -34,12 +34,20 @@ def get_live_user_count():
 
 live_users = get_live_user_count()
 
+# AS 라이브 채팅방 초기 대화 내역 세션 설정
+if "as_chat_messages" not in st.session_state:
+    st.session_state.as_chat_messages = [
+        {"sender": "품질관리팀 김대리", "text": "3호기 텐터 가공분 수축률 -2.5%로 바이어 기준 통과했습니다."},
+        {"sender": "영업부 박과장", "text": "수고하셨습니다! 바이어에게 영문 견적서(CBD) 쏜다 ㄱㄱ"},
+        {"sender": "공장장", "text": "스판덱스 플레이팅 장력 팽팽하게 유지해라. 파공 조심하고."}
+    ]
+
 # ==============================================================================
 # 1. 전역 세션 상태 초기화 (Front -> Tuck -> Back 순서 엄수)
 # ==============================================================================
 defaults = {
     "fabric_name": "CVC 30s 싱글 스판 저지 (Single Span Jersey)",
-    "pattern_type": "Single Jersey (1-Track All Knit)",
+    "pattern_type": "Single Jersey (Front/Back)",
     "struct_mode": "싱글 저지 (표준 100% 침수)",
     "yarn_origin": "베트남/국내산 코마사 (표준 축률)",
     "rec_inch": 30,
@@ -52,7 +60,6 @@ defaults = {
     "wpi": 38,
     "cpi": 52,
     "plating_factor": 0.70,
-    # [원사 배열 순서 엄수]: Front(전면사) -> Tuck(터크사) -> Back(이면사) -> Span 1 -> Span 2
     "y1_name": "CVC 30s/1 (Front 전면사)", "y1_count": 30.0, "y1_unit": "Ne(면번수)", "y1_feeds": 90, "y1_sl": 2.82, "y1_price": 3.40, "y1_draft": 1.0, "y1_share": 100.0,
     "y2_name": "CM 30s/1 (Tuck 터크사)", "y2_count": 30.0, "y2_unit": "Ne(면번수)", "y2_feeds": 0, "y2_sl": 2.10, "y2_price": 3.50, "y2_draft": 1.0, "y2_share": 100.0,
     "y3_name": "Cotton 20s/1 (Back 이면사)", "y3_count": 20.0, "y3_unit": "Ne(면번수)", "y3_feeds": 0, "y3_sl": 3.80, "y3_price": 3.10, "y3_draft": 1.0, "y3_share": 100.0,
@@ -145,6 +152,17 @@ st.markdown("""
         margin-top: 8px;
         line-height: 1.8;
     }
+    /* A/S 라이브 채팅창 박스 전용 스타일 */
+    .as-chat-box {
+        background: #0B0F19;
+        border: 1px solid #1E293B;
+        border-radius: 10px;
+        padding: 10px;
+        max-height: 220px;
+        overflow-y: auto;
+        font-size: 0.82rem;
+        margin-bottom: 8px;
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -173,14 +191,37 @@ def analyze_swatch_pixels(front_img_file, back_img_file):
         return {"analyzed": False}
 
 # ==============================================================================
-# 4. 좌측 사이드바 네비게이션
+# 4. 좌측 사이드바 네비게이션 & A/S 라이브 CS 채팅창 (실시간 접속자 밑 배치)
 # ==============================================================================
 with st.sidebar:
     st.markdown("## ⚡ NEXUS-TEX AI")
     st.caption("Front-Tuck-Back Pipeline")
     st.markdown(f'<div class="live-badge">🟢 접속 실무자: {live_users}명 (무료)</div>', unsafe_allow_html=True)
-    st.write("---")
+    
+    # ── [신규 추가] A/S 라이브 CS 실무 채팅창 ──────────────────────────────────
+    st.markdown("---")
+    st.markdown("💬 **A/S 라이브 CS 실시간 채팅실**")
+    
+    # 채팅 내역 렌더링 영역
+    chat_container = st.container()
+    with chat_container:
+        chat_html = "<div class='as-chat-box'>"
+        for msg in st.session_state.as_chat_messages:
+            chat_html += f"<div style='margin-bottom:6px;'><b>{msg['sender']}</b>: {msg['text']}</div>"
+        chat_html += "</div>"
+        st.markdown(chat_html, unsafe_allow_html=True)
 
+    # 채팅 입력 Form (엔터 또는 버튼 누르면 실시간 추가)
+    with st.form(key="as_chat_form", clear_on_submit=True):
+        user_sender = st.text_input("닉네임/직책", value="공장 실무자", label_visibility="collapsed")
+        user_msg = st.text_input("CS/AS 문의 입력...", placeholder="메시지 입력...", label_visibility="collapsed")
+        submitted = st.form_submit_button("전송 🚀", use_container_width=True)
+        if submitted and user_msg.strip():
+            st.session_state.as_chat_messages.append({"sender": user_sender, "text": user_msg.strip()})
+            st.rerun()
+    # ──────────────────────────────────────────────────────────────────────────
+
+    st.write("---")
     st.markdown("### 🧭 공정 파이프라인 네비게이션")
     selected_module = st.radio(
         "공정 이동",
@@ -226,7 +267,7 @@ with st.expander("📖 [사용설명서] Front(전면) ➔ Tuck(터크) ➔ Back
 st.write("---")
 
 # ==============================================================================
-# MODULE 1: 스와치 사진 분석 & 역설계 (Front -> Tuck -> Back 순서 매핑)
+# MODULE 1: 스와치 사진 분석 & 역설계
 # ==============================================================================
 if selected_module == "1) 스와치 사진 분석 & 역설계":
     st.subheader("🔍 1) 스와치 사진 분석 & AI Vision 역설계 (Front ➔ Tuck ➔ Back 순서)")
@@ -275,7 +316,6 @@ if selected_module == "1) 스와치 사진 분석 & 역설계":
     pixel_res = analyze_swatch_pixels(front_img, back_img) if front_img else {"analyzed": False}
     origin_shrink_mod = 2.5 if "인도산" in yarn_origin_sel else (-1.5 if "컴팩트" in yarn_origin_sel else 0.0)
 
-    # [원사 스펙 튜플 정의 순서 엄수]: y1(Front 전면사), y2(Tuck 터크사), y3(Back 이면사), y4(Span 1)
     if "싱글 스판" in preset_type:
         p = {
             "name": "CVC 30s 싱글 스판 저지", "pattern": "Single Jersey (Front/Back)", "struct": "싱글 저지", 
@@ -377,7 +417,7 @@ if selected_module == "1) 스와치 사진 분석 & 역설계":
 
 
 # ==============================================================================
-# MODULE 2: 5-사종 혼용률 & 재고 구출 (Front -> Tuck -> Back 순서 엄수)
+# MODULE 2: 5-사종 혼용률 & 재고 구출
 # ==============================================================================
 elif selected_module == "2) 5-사종 혼용률 & 재고 구출":
     st.subheader("⚙️ 2) 5-사종 정밀 혼용률 제너레이터 (Front ➔ Tuck ➔ Back 순서)")
@@ -402,7 +442,6 @@ elif selected_module == "2) 5-사종 혼용률 & 재고 구출":
         with sc3:
             st.session_state.rec_rpm = st.number_input("가동 RPM", value=int(st.session_state.rec_rpm), step=1)
 
-        # [사종 라벨 순서 엄수]: 사종1(Front), 사종2(Tuck), 사종3(Back), 사종4(Span1), 사종5(Span2)
         slot_labels = [
             "사종 1 (Front 전면사)", 
             "사종 2 (Tuck 터크사)", 
