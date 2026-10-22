@@ -9,10 +9,10 @@ import uuid
 import random
 
 # ==============================================================================
-# 0. 페이지 설정 & 랜덤 닉네임 초기화 (수정 가능하도록 세션 분리)
+# 0. 페이지 설정 & 랜덤 닉네임 초기화
 # ==============================================================================
 st.set_page_config(
-    page_title="구동현-TEX AI v3.9 | Editable Nickname Edition",
+    page_title="구동현-TEX AI v3.11 | Demo Edition",
     page_icon="⚡",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -39,7 +39,6 @@ def get_live_user_count():
 
 live_users = get_live_user_count()
 
-# 최초 접속 시에만 랜덤 형용사+동물 닉네임 부여, 이후엔 세션에 유지되어 수정 가능
 if "user_nickname" not in st.session_state:
     adjectives = ["용감한", "재빠른", "꼼꼼한", "냉철한", "노련한", "열정적인", "날카로운", "든든한", "민첩한", "특급"]
     animals = ["호랑이", "사자", "독수리", "표범", "늑대", "상어", "매", "곰", "고슴도치", "판다"]
@@ -90,7 +89,7 @@ FACTORY_MACHINES = [
 ]
 
 # ==============================================================================
-# 2. UI 가시성 및 입력창 세부 교정 CSS
+# 2. UI 가시성 및 드롭다운/입력창 검은색 글씨 강제 CSS
 # ==============================================================================
 st.markdown("""
 <style>
@@ -123,6 +122,13 @@ st.markdown("""
     
     [data-testid="stMetricValue"], [data-testid="stMetricLabel"], [data-testid="stMetricDelta"] {
         color: #FFFFFF !important;
+    }
+
+    div[data-baseweb="select"] * {
+        color: #000000 !important;
+    }
+    div[data-baseweb="popover"] * {
+        color: #000000 !important;
     }
 
     section[data-testid="stSidebar"] input {
@@ -176,6 +182,18 @@ st.markdown("""
         font-weight: 700;
         margin-bottom: 10px;
     }
+    .demo-badge {
+        display: inline-block;
+        background: rgba(56, 189, 248, 0.15);
+        border: 1px solid #38BDF8;
+        color: #38BDF8 !important;
+        padding: 4px 10px;
+        border-radius: 6px;
+        font-size: 0.75rem;
+        font-weight: 700;
+        vertical-align: middle;
+        margin-left: 10px;
+    }
     .yarn-summary-box {
         background: #0F172A;
         border-left: 4px solid #00F2FE;
@@ -225,7 +243,7 @@ def analyze_swatch_pixels(front_img_file, back_img_file):
         return {"analyzed": False}
 
 # ==============================================================================
-# 4. 좌측 사이드바 네비게이션 & 수정 가능한 닉네임 채팅창
+# 4. 좌측 사이드바 네비게이션 & 채팅창
 # ==============================================================================
 with st.sidebar:
     st.markdown('<div class="notice-badge">🚨 10/24 서비스 종료 예정</div>', unsafe_allow_html=True)
@@ -246,12 +264,10 @@ with st.sidebar:
             st.markdown(chat_html, unsafe_allow_html=True)
 
         with st.form(key="as_chat_form", clear_on_submit=True):
-            # 🔥 [요청 반영] 닉네임을 사용자가 직접 수정할 수 있도록 disabled 해제 및 세션 연동
             user_sender = st.text_input("닉네임", value=st.session_state.user_nickname)
             user_msg = st.text_input("CS/AS 문의 입력...", placeholder="메시지 입력...", label_visibility="collapsed")
             submitted = st.form_submit_button("전송 🚀", use_container_width=True)
             if submitted and user_msg.strip():
-                # 입력한 닉네임 상태를 세션에 저장하여 계속 유지되도록 함
                 st.session_state.user_nickname = user_sender.strip() if user_sender.strip() else "익명 실무자"
                 global_chat_messages.append({"sender": st.session_state.user_nickname, "text": user_msg.strip()})
                 st.rerun()
@@ -281,11 +297,11 @@ with st.sidebar:
     )
 
 # ==============================================================================
-# 5. 상단 헤더 & 사용설명서
+# 5. 상단 헤더 (Demo Version 뱃지 표기 포함) & 사용설명서
 # ==============================================================================
 h_c1, h_c2 = st.columns([3.2, 1])
 with h_c1:
-    st.title("⚡ 구동현-TEX AI : 전 공정 통합 관제 OS")
+    st.title("⚡ 구동현-TEX AI <span class='demo-badge'>DEMO VERSION</span>", unsafe_allow_html=True)
 with h_c2:
     st.markdown(f"<div style='text-align:right; padding-top:16px;'><span class='live-badge'>🟢 LIVE {live_users}명 Online</span></div>", unsafe_allow_html=True)
 
@@ -658,7 +674,7 @@ elif selected_module == "5) 납기 원가 관제탑 & 불량레이더":
 # MODULE 6: 야드/롤 변환 & 물류 최적화
 # ==============================================================================
 elif selected_module == "6) 야드/롤 변환 & 물류 최적화":
-    st.subheader("📦 6) 야드/롤 변환기 & 광폭 마카 손익 · 컨테이너 CBM 최적화")
+    st.subheader("📦 6) 야드/롤 변환기 & 광폭 마카 손익 · 컨테이너 CBM 적재 최적화")
 
     st.markdown('<div class="hero-card">', unsafe_allow_html=True)
     u1, u2, u3, u4 = st.columns(4)
@@ -693,6 +709,6 @@ elif selected_module == "6) 야드/롤 변환 & 물류 최적화":
         st.markdown("### 🚢 컨테이너 CBM 적재 최적화기")
         t_cm = st.number_input("지관 외경 (cm)", value=8.5, step=0.5)
         th_mm = st.number_input("원단 두께 (mm)", value=round(c_g / 320.0, 2), step=0.05)
-        cntr = st.selectbox("컨테이너", ["20ft Dry (28 CBM)", "40ft High Cube (68 CBM)"], index=1)
+        cntr = selectbox_placeholder = st.selectbox("컨테이너", ["20ft Dry (28 CBM)", "40ft High Cube (68 CBM)"], index=1)
         r_dia = round(math.sqrt(t_cm**2 + (4.0 * (t_yds*yds_kg*91.44) * (th_mm / 10.0)) / math.pi), 1)
         st.info(f"📐 1롤 예상 직경: `{r_dia} cm` | 40ft 컨테이너 최대 적재 수량 산출 완료")
