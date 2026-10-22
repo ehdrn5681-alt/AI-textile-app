@@ -11,7 +11,7 @@ import uuid
 # 0. 페이지 설정 & 실시간 접속자 및 AS 라이브 채팅 세션 초기화
 # ==============================================================================
 st.set_page_config(
-    page_title="구동현-TEX AI v3.5 | UI Fix Edition",
+    page_title="구동현-TEX AI v3.6 | Final Edition",
     page_icon="⚡",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -84,7 +84,7 @@ FACTORY_MACHINES = [
 ]
 
 # ==============================================================================
-# 2. UI 가시성 및 입력창 글씨 검은색 고정 CSS (채팅창 및 사진 업로드란 완벽 대응)
+# 2. UI 가시성 및 입력창 세부 교정 CSS (버튼 가시성 및 텍스트 충돌 완벽 해결)
 # ==============================================================================
 st.markdown("""
 <style>
@@ -119,14 +119,14 @@ st.markdown("""
         color: #FFFFFF !important;
     }
 
-    /* 🔥 [핵심 수정 1] 앱 내 모든 텍스트 입력창(채팅창, 닉네임 등) 내부 글씨를 명확한 검은색(#000000)으로 강제 */
-    input, textarea, select {
+    /* 텍스트 입력창(채팅창, 닉네임)만 글씨를 검은색으로 고정 */
+    section[data-testid="stSidebar"] input {
         color: #000000 !important;
         background-color: #FFFFFF !important;
         font-weight: 700 !important;
     }
-    
-    /* 🔥 [핵심 수정 2] 사진 업로드 박스 내부 글씨 및 배경 가시성 확보 */
+
+    /* 사진 업로드 박스 디자인 정돈 */
     [data-testid="stFileUploader"] section {
         background-color: #1E293B !important;
         border: 2px dashed #38BDF8 !important;
