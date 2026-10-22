@@ -9,10 +9,10 @@ import uuid
 import random
 
 # ==============================================================================
-# 0. 페이지 설정 & 무료 실시간 접속자 카운터 (API 토큰 비용 $0)
+# 0. 페이지 설정 & 무료 실시간 접속자 카운터 & 영구 채팅/닉네임 초기화
 # ==============================================================================
 st.set_page_config(
-    page_title="구동현-TEX AI v3.15 | Argon Steve Jobs Edition",
+    page_title="구동현-TEX AI v4.0 | Ultimate Master Edition",
     page_icon="⚡",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -24,6 +24,7 @@ def get_active_sessions():
 
 @st.cache_resource
 def get_global_chat_history():
+    # 서버 메모리에 채팅 내역 영구 보존 (새로고침 시 초기화 방지)
     return []
 
 def get_live_user_count():
@@ -39,7 +40,7 @@ def get_live_user_count():
 
 live_users = get_live_user_count()
 
-# 최초 접속 시 형용사 + 동물 랜덤 닉네임 자동 부여 (이후 수정 가능)
+# 최초 접속 시 형용사 + 동물 랜덤 닉네임 부여 (이후 사용자가 직접 수정 가능)
 if "user_nickname" not in st.session_state:
     adjectives = ["용감한", "재빠른", "꼼꼼한", "냉철한", "노련한", "열정적인", "날카로운", "든든한", "민첩한", "특급"]
     animals = ["호랑이", "사자", "독수리", "표범", "늑대", "상어", "매", "곰", "고슴도치", "판다"]
@@ -48,7 +49,7 @@ if "user_nickname" not in st.session_state:
 global_chat_messages = get_global_chat_history()
 
 # ==============================================================================
-# 1. 전역 세션 상태 초기화 (모듈 1 -> 2 -> 3 -> 4 원클릭 자동 동기화)
+# 1. 전역 세션 상태 초기화 (전 공정 모듈 1 -> 6 원클릭 자동 동기화)
 # ==============================================================================
 defaults = {
     "fabric_name": "CVC 30s 싱글 스판 저지 (Single Span Jersey)",
@@ -58,25 +59,29 @@ defaults = {
     "rec_inch": 30,
     "rec_gauge": 28,
     "rec_feeds": 90,
-    "rec_rpm": 21,
+    "rec_rpm": 22,
     "target_gsm": 185.0,
     "target_width": 60.0,
     "order_kg": 1200.0,
     "wpi": 38,
     "cpi": 52,
-    "plating_factor": 0.70, # 스판덱스 플레이팅 물리 보정계수 (핵심 정밀화)
-    # 5-사종 데이터 (이름, 번수, 단위, 피더수, 루프장mm, 단가$, 드래프트율, 단가라점유율%)
+    "plating_factor": 0.70,
+    # 5-사종 데이터
     "y1_name": "CVC 30s/1 (전면사 Face)", "y1_count": 30.0, "y1_unit": "Ne(면번수)", "y1_feeds": 90, "y1_sl": 2.82, "y1_price": 3.40, "y1_draft": 1.0, "y1_share": 100.0,
     "y2_name": "Cotton 20s/1 (이면사 Back)", "y2_count": 20.0, "y2_unit": "Ne(면번수)", "y2_feeds": 0, "y2_sl": 3.80, "y2_price": 3.10, "y2_draft": 1.0, "y2_share": 100.0,
-    "y3_name": "CM 30s/1 (터크사 Tuck)", "y3_count": 30.0, "y3_unit": "Ne(면번수)", "y3_feeds": 0, "y3_sl": 2.10, "y3_price": 3.50, "y3_draft": 1.0, "y3_share": 100.0,
+    "y3_name": "CM 30s/1 (터크/결합사)", "y3_count": 30.0, "y3_unit": "Ne(면번수)", "y3_feeds": 0, "y3_sl": 2.15, "y3_price": 3.50, "y3_draft": 1.0, "y3_share": 100.0,
     "y4_name": "Spandex 20D (스판덱스 1)", "y4_count": 20.0, "y4_unit": "Denier(데니어)", "y4_feeds": 90, "y4_sl": 2.82, "y4_price": 6.80, "y4_draft": 3.1, "y4_share": 100.0,
     "y5_name": "Spandex 40D (스판덱스 2)", "y5_count": 40.0, "y5_unit": "Denier(데니어)", "y5_feeds": 0, "y5_sl": 2.82, "y5_price": 6.20, "y5_draft": 3.2, "y5_share": 100.0,
-    # 모듈 간 공유 계산 결과
+    # 공정 간 공유 연산 결과
     "calc_daily_kg": 248.0,
     "calc_yarn_cost_kg": 3.58,
     "calc_tf": 1.42,
     "calc_span_pct": 5.1,
-    "silicone_g_l": 15.0
+    "silicone_g_l": 15.0,
+    "kettle_cap": 500,
+    "dye_path": "CVC/TC 2욕 분할 염색 (+$0.42/kg · +1.5일)",
+    "w_shrink_Shared": 12.0,
+    "l_shrink_Shared": 10.5
 }
 
 for k, v in defaults.items():
@@ -88,64 +93,170 @@ FACTORY_MACHINES = [
     {"id": "MC-02", "name": "34인치 28G 광폭 싱글기 (Santoni)", "gauge": 28, "inch": 34, "feeds": 102, "rpm": 20, "type": "Single"},
     {"id": "MC-03", "name": "30인치 24G 양면/인터록/립기 (Terrot)", "gauge": 24, "inch": 30, "feeds": 84, "rpm": 18, "type": "Double"},
     {"id": "MC-04", "name": "30인치 20G 3단 쭈리기 (Pai Lung)", "gauge": 20, "inch": 30, "feeds": 60, "rpm": 16, "type": "Fleece"},
-    {"id": "MC-05", "name": "32인치 32G 하이게이지 싱글기", "gauge": 32, "inch": 32, "feeds": 96, "rpm": 20, "type": "Single"},
+    {"id": "MC-05", "name": "32인치 32G 하이게이지 양면기", "gauge": 32, "inch": 32, "feeds": 96, "rpm": 20, "type": "Double"},
 ]
 
 # ==============================================================================
-# 2. 스티브 잡스식 미니멀 다크 UI & 가시성 검은색 폰트 강제 CSS (드롭다운 포함)
+# 2. 초고시인성 CSS (배경 위 모든 글씨 순백색 #FFFFFF / 입력창·드롭다운 내부만 #000000)
 # ==============================================================================
 st.markdown("""
 <style>
-    .stApp { background-color: #090D16; color: #E2E8F0; }
+    /* 전체 배경 및 기본 텍스트 순백색 강제 */
+    .stApp { background-color: #090D16 !important; color: #FFFFFF !important; }
+    
+    /* 사이드바 배경 및 텍스트 순백색 */
     section[data-testid="stSidebar"] {
         background-color: #0F172A !important;
         border-right: 1px solid #1E293B;
     }
-    section[data-testid="stSidebar"] * {
-        color: #F1F5F9 !important;
-        font-weight: 500;
+    section[data-testid="stSidebar"] p,
+    section[data-testid="stSidebar"] span,
+    section[data-testid="stSidebar"] div,
+    section[data-testid="stSidebar"] label,
+    section[data-testid="stSidebar"] h1,
+    section[data-testid="stSidebar"] h2,
+    section[data-testid="stSidebar"] h3,
+    section[data-testid="stSidebar"] h4 {
+        color: #FFFFFF !important;
     }
+
+    /* 본문 내 모든 제목, 라벨, 캡션, 메트릭 값 순백색(#FFFFFF) 강제 고정 (흐릿함 완전 제거) */
+    h1, h2, h3, h4, h5, h6, p, label,
+    .stMarkdown, .stCaption, small,
+    [data-testid="stWidgetLabel"] p,
+    [data-testid="stWidgetLabel"] span,
+    [data-testid="stMetricLabel"] *,
+    [data-testid="stMetricValue"] *,
+    [data-testid="stMetricDelta"] *,
+    [data-testid="stExpander"] summary p,
+    [data-testid="stExpander"] summary span {
+        color: #FFFFFF !important;
+        opacity: 1.0 !important;
+    }
+
+    /* 네비게이션 라디오 버튼 스타일링 */
     div[role="radiogroup"] > label {
-        background: rgba(30, 41, 59, 0.75);
-        padding: 13px 16px !important;
-        border-radius: 12px;
-        margin-bottom: 8px;
-        border: 1px solid #334155;
+        background: rgba(30, 41, 59, 0.85) !important;
+        padding: 12px 15px !important;
+        border-radius: 12px !important;
+        margin-bottom: 8px !important;
+        border: 1px solid #334155 !important;
         transition: all 0.2s ease;
     }
     div[role="radiogroup"] > label:hover {
-        border-color: #00F2FE;
-        background: rgba(15, 23, 42, 0.98);
+        border-color: #00F2FE !important;
+        background: rgba(15, 23, 42, 1.0) !important;
         transform: translateX(3px);
     }
-    /* 드롭다운 팝업 내부 글씨 가시성 오류 원천 차단 (검은색 폰트) */
-    div[data-baseweb="select"] *, div[data-baseweb="popover"] *, ul[data-baseweb="menu"] li *, div[role="option"] * {
-        color: #000000 !important;
+    div[role="radiogroup"] > label * {
+        color: #FFFFFF !important;
+        font-weight: 600 !important;
     }
-    section[data-testid="stSidebar"] input {
+
+    /* 🔥 [핵심] 모든 흰색 입력창(Input, Number, Textarea) 내부 글씨는 선명한 검은색(#000000) */
+    input, textarea, [data-baseweb="input"] input, [data-baseweb="base-input"] input {
         color: #000000 !important;
         background-color: #FFFFFF !important;
+        -webkit-text-fill-color: #000000 !important;
         font-weight: 700 !important;
     }
+    input::placeholder, textarea::placeholder {
+        color: #64748B !important;
+        -webkit-text-fill-color: #64748B !important;
+    }
+    /* 숫자 입력창 우측 +/- 버튼 아이콘 검은색 */
+    [data-testid="stNumberInput"] button {
+        color: #000000 !important;
+        background-color: #F1F5F9 !important;
+    }
+    [data-testid="stNumberInput"] button svg {
+        fill: #000000 !important;
+    }
+
+    /* 🔥 [핵심] 셀렉트박스(드롭다운) 본체 및 팝업 메뉴 리스트 글씨 검은색(#000000) 강제 */
+    div[data-baseweb="select"] > div {
+        background-color: #FFFFFF !important;
+        color: #000000 !important;
+    }
+    div[data-baseweb="select"] *,
+    div[data-baseweb="popover"] *,
+    ul[data-baseweb="menu"] *,
+    li[role="option"] *,
+    div[role="listbox"] * {
+        color: #000000 !important;
+        -webkit-text-fill-color: #000000 !important;
+        font-weight: 600 !important;
+    }
+    div[data-baseweb="select"] svg {
+        fill: #000000 !important;
+    }
+
+    /* 🔥 [핵심] 파일 업로더 박스 & 내부 Upload/Browse 버튼 가시성 완벽 교정 */
+    [data-testid="stFileUploader"] section {
+        background-color: #1E293B !important;
+        border: 2px dashed #38BDF8 !important;
+        border-radius: 12px !important;
+        padding: 16px !important;
+    }
+    [data-testid="stFileUploader"] section > div,
+    [data-testid="stFileUploader"] section span,
+    [data-testid="stFileUploader"] section small {
+        color: #FFFFFF !important;
+    }
+    [data-testid="stFileUploader"] section button {
+        background-color: #00F2FE !important;
+        color: #000000 !important;
+        border: none !important;
+        font-weight: 800 !important;
+    }
+    [data-testid="stFileUploader"] section button * {
+        color: #000000 !important;
+        -webkit-text-fill-color: #000000 !important;
+        font-weight: 800 !important;
+    }
+
+    /* 사이드바 폼 전송 버튼 및 일반 버튼 가시성 보장 */
+    .stButton > button[kind="primary"] {
+        background: linear-gradient(90deg, #FF4B4B 0%, #FF6B6B 100%) !important;
+        color: #FFFFFF !important;
+        font-weight: 800 !important;
+        border: none !important;
+    }
+    .stButton > button[kind="primary"] * {
+        color: #FFFFFF !important;
+    }
+    [data-testid="stFormSubmitButton"] > button {
+        background-color: #38BDF8 !important;
+        color: #000000 !important;
+        font-weight: 800 !important;
+        border: none !important;
+    }
+    [data-testid="stFormSubmitButton"] > button * {
+        color: #000000 !important;
+        font-weight: 800 !important;
+    }
+
+    /* 카드 및 배지 디자인 */
     .hero-card {
-        background: linear-gradient(135deg, rgba(15,23,42,0.95) 0%, rgba(30,41,59,0.85) 100%);
-        border: 1px solid rgba(0, 242, 254, 0.35);
+        background: linear-gradient(135deg, rgba(15,23,42,0.96) 0%, rgba(30,41,59,0.90) 100%);
+        border: 1px solid rgba(0, 242, 254, 0.4);
         border-radius: 16px;
         padding: 22px 26px;
         margin-bottom: 18px;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.45);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.5);
     }
     .glass-card {
-        background: rgba(17, 24, 39, 0.85);
-        border: 1px solid rgba(56, 189, 248, 0.22);
+        background: rgba(17, 24, 39, 0.92);
+        border: 1px solid rgba(56, 189, 248, 0.3);
         border-radius: 12px;
         padding: 16px 20px;
         margin-bottom: 14px;
+        color: #FFFFFF !important;
     }
-    .neon-title { color: #38BDF8; font-weight: 800; font-size: 1.08rem; margin-bottom: 8px; }
+    .neon-title { color: #38BDF8 !important; font-weight: 800; font-size: 1.08rem; margin-bottom: 8px; }
     .live-badge {
         display: inline-block;
-        background: rgba(16, 185, 129, 0.15);
+        background: rgba(16, 185, 129, 0.2);
         border: 1px solid #10B981;
         color: #34D399 !important;
         padding: 6px 14px;
@@ -155,9 +266,9 @@ st.markdown("""
     }
     .notice-badge {
         display: inline-block;
-        background: rgba(239, 68, 68, 0.15);
+        background: rgba(239, 68, 68, 0.2);
         border: 1px solid #EF4444;
-        color: #F87171 !important;
+        color: #FCA5A5 !important;
         padding: 6px 14px;
         border-radius: 999px;
         font-size: 0.85rem;
@@ -166,15 +277,37 @@ st.markdown("""
     }
     .demo-badge {
         display: inline-block;
-        background: rgba(56, 189, 248, 0.15);
+        background: rgba(56, 189, 248, 0.2);
         border: 1px solid #38BDF8;
         color: #38BDF8 !important;
         padding: 4px 10px;
         border-radius: 6px;
-        font-size: 0.75rem;
-        font-weight: 700;
+        font-size: 0.78rem;
+        font-weight: 800;
         vertical-align: middle;
         margin-left: 10px;
+    }
+    .structure-box {
+        background: #0F172A;
+        border: 1.5px solid #00F2FE;
+        border-radius: 12px;
+        padding: 16px 18px;
+        margin-top: 8px;
+        margin-bottom: 14px;
+        color: #FFFFFF !important;
+        line-height: 1.65;
+    }
+    .diagram-pre {
+        background: #050811;
+        border: 1px solid #334155;
+        color: #00F2FE !important;
+        padding: 10px 14px;
+        border-radius: 8px;
+        font-family: monospace;
+        font-size: 0.86rem;
+        margin-top: 8px;
+        white-space: pre-wrap;
+        line-height: 1.45;
     }
     .yarn-summary-box {
         background: #0F172A;
@@ -182,18 +315,18 @@ st.markdown("""
         padding: 16px 20px;
         border-radius: 10px;
         font-size: 1.0rem;
-        color: #F8FAFC;
+        color: #FFFFFF !important;
         margin-top: 8px;
         line-height: 1.8;
     }
     .as-chat-box {
         background: #0B0F19;
-        border: 1px solid #1E293B;
+        border: 1px solid #334155;
         border-radius: 10px;
         padding: 10px;
-        max-height: 200px;
+        max-height: 210px;
         overflow-y: auto;
-        font-size: 0.82rem;
+        font-size: 0.84rem;
         margin-bottom: 8px;
         color: #FFFFFF !important;
     }
@@ -201,15 +334,146 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ==============================================================================
-# 3. 유틸리티: 물리 공식 & 실제 이미지 픽셀 비전 분석 함수
+# 3. 원단 전문가용 8대 조직 마스터 DB & AI 픽셀 비전 자동 규정 엔진
 # ==============================================================================
 def to_tex(count_val, unit_str):
     if count_val <= 0:
         return 0.0
     return (590.5 / count_val) if "Ne" in unit_str else (count_val / 9.0)
 
-def analyze_swatch_pixels(front_img_file, back_img_file):
-    """업로드된 실제 스와치 이미지의 픽셀 행렬을 분석하여 루프 밀도/터크 다공성/표면 요철을 실측 추정"""
+STRUCTURE_DB = {
+    "CVC 30s 싱글 스판 저지 (Single Span Jersey)": {
+        "pattern": "Single Jersey (1-Track All Knit + Plating)",
+        "struct": "싱글 저지 (표준 100% 침수)",
+        "desc": "기본 1트랙 전 피더 니트 루프에 스판덱스를 전 피더 플레이팅 결합한 고신축 표준 싱글 조직",
+        "inch": 30, "gauge": 28, "feeds": 90, "rpm": 22, "type": "Single", "needle_mult": 1.0,
+        "wpi": 38, "cpi": 52, "sl": 2.82, "draft": 3.1,
+        "cam": "Feed 1~90: All Knit (Single Cam) + Spandex Plating (보정계수 0.70)",
+        "needle": "1-Track High Butt Needles (실린더 100% 가동)",
+        "seq": "전 피더 CVC 30s/1 + Spandex 20D 전 피더 플레이팅",
+        "diagram": "Course 1~N (All Feeds):  [ Ω Knit ] ── [ Ω Knit ] ── [ Ω Knit ] ── [ Ω Knit ]\nPlating Carrier (OP):    ( ─── Spandex 20D Full-Plating ─── )",
+        "w_shrink": 12.0, "l_shrink": 10.5, "fee": 0.35, "span_pct": 5.1,
+        "y1": ("CVC 30s/1 (전면사)", 30.0, "Ne(면번수)", 90, 2.82, 3.40, 1.0, 100.0),
+        "y2": ("미사용 (이면사)", 20.0, "Ne(면번수)", 0, 3.50, 3.10, 1.0, 100.0),
+        "y3": ("미사용 (터크사)", 30.0, "Ne(면번수)", 0, 2.00, 3.30, 1.0, 100.0),
+        "y4": ("Spandex 20D (스판1)", 20.0, "Denier(데니어)", 90, 2.82, 6.80, 3.1, 100.0),
+    },
+    "Cotton 30s/20s 2단 터크 미니 쭈리 (French Terry)": {
+        "pattern": "2-Thread French Terry (1-Knit / 1-Tuck Binding)",
+        "struct": "싱글 변형 (표준 100% 침수)",
+        "desc": "홀수 피더는 평니트(바닥), 짝수 피더는 1침 터크·1침 미스(Float)로 이면 파일 루프를 형성하는 미니 쭈리",
+        "inch": 30, "gauge": 24, "feeds": 72, "rpm": 18, "type": "Fleece", "needle_mult": 1.0,
+        "wpi": 30, "cpi": 40, "sl": 3.05, "draft": 3.0,
+        "cam": "홀수 Feed: All Knit (Face) / 짝수 Feed: [1 Tuck - 1 Miss(Float)] 교차 배열",
+        "needle": "2-Track (High/Low Butt 1:1 교차 배열 - 이면 인레이 루프 바인딩)",
+        "seq": "홀수 피더: CM 30s + 20D OP / 짝수 피더: CM 20s 이면 루프사",
+        "diagram": "Feed 1 (Face Knit):  [ Ω Knit ] ─── [ Ω Knit ] ─── [ Ω Knit ] ─── [ Ω Knit ]\nFeed 2 (Back Loop):  [ ∧ Tuck ] ─── ( ──Miss── ) ─── [ ∧ Tuck ] ─── ( ──Miss── )",
+        "w_shrink": 14.5, "l_shrink": 13.0, "fee": 0.45, "span_pct": 3.8,
+        "y1": ("CM 30s/1 (전면사)", 30.0, "Ne(면번수)", 36, 3.05, 3.60, 1.0, 100.0),
+        "y2": ("CM 20s/1 (이면 루프사)", 20.0, "Ne(면번수)", 18, 4.20, 3.15, 1.0, 100.0),
+        "y3": ("CM 30s/1 (터크 결합사)", 30.0, "Ne(면번수)", 18, 2.15, 3.60, 1.0, 100.0),
+        "y4": ("Spandex 20D (스판1)", 20.0, "Denier(데니어)", 36, 3.05, 6.80, 3.0, 100.0),
+    },
+    "Cotton 20s/30s/10s 3단 헤비 쭈리 (3-Thread Heavy Fleece)": {
+        "pattern": "3-Thread Fleece (Face Knit + Binder + Heavy Pile)",
+        "struct": "싱글 변형 (표준 100% 침수)",
+        "desc": "표면사(Face) + 중간 결합사(Binder) + 태번수 이면 루프사(Pile)가 3피더 1세트로 돌아가는 고중량 헤비 쭈리",
+        "inch": 30, "gauge": 20, "feeds": 60, "rpm": 16, "type": "Fleece", "needle_mult": 1.0,
+        "wpi": 26, "cpi": 36, "sl": 3.45, "draft": 1.0,
+        "cam": "Feed 1: All Knit(Face) / Feed 2: Knit-Miss(Binder) / Feed 3: 1 Tuck - 2 Miss(Pile)",
+        "needle": "4-Track (1-2-3-4 사선 바인딩 배열 - 표면 터크 비침 원천 차단)",
+        "seq": "F1: CM 20s(표면) / F2: CVC 30s(결합) / F3: CD 10s(이면 헤비 파일)",
+        "diagram": "Feed 1 (Face 20s):    [ Ω Knit ] ── [ Ω Knit ] ── [ Ω Knit ]\nFeed 2 (Binder 30s):  [ Ω Knit ] ── ( ──Miss── ) ── [ Ω Knit ]\nFeed 3 (Pile 10s):    [ ∧ Tuck ] ── ( ──Float── ) ── ( ──Float── )",
+        "w_shrink": 15.5, "l_shrink": 14.0, "fee": 0.50, "span_pct": 0.0,
+        "y1": ("CM 20s/1 (표면사 Face)", 20.0, "Ne(면번수)", 20, 3.45, 3.30, 1.0, 100.0),
+        "y2": ("CD 10s/1 (이면 파일사)", 10.0, "Ne(면번수)", 20, 4.60, 2.75, 1.0, 100.0),
+        "y3": ("CVC 30s/1 (중간 결합사)", 30.0, "Ne(면번수)", 20, 2.60, 3.40, 1.0, 100.0),
+        "y4": ("미사용", 20.0, "Denier(데니어)", 0, 2.80, 6.80, 3.0, 100.0),
+    },
+    "CM 20s 12조 터크 와플 (12-Course Tuck Waffle)": {
+        "pattern": "12-Course Thermal Waffle (Multi-Tuck Honeycomb)",
+        "struct": "양면 인터록/1x1립 (200% 침수)",
+        "desc": "다이얼과 실린더에서 12코스 주기로 교차 연속 터크(Tuck)를 걸어 깊은 사각 와플 격자 요철을 만드는 보온성 조직",
+        "inch": 30, "gauge": 20, "feeds": 60, "rpm": 16, "type": "Double", "needle_mult": 1.8,
+        "wpi": 28, "cpi": 42, "sl": 3.20, "draft": 1.0,
+        "cam": "Course 1~5: 홀수침 연속 Tuck(요철 기둥) / Course 6: All Knit(수평 격자 마감) / Course 7~12: 짝수침 반전",
+        "needle": "Dial 2-Track + Cylinder 2-Track (1x1 Rib Gating 기반 와플 세팅)",
+        "seq": "전 피더 CM 20s/1 단독 급사 (연속 터크부 장력 15% 이완 필수)",
+        "diagram": "Course 1~5 (Ridge):   [ Ω Knit ] ── [ ∧ Tuck x5 ] ── [ Ω Knit ]\nCourse 6 (Divider):   [ Ω Knit ] ── [ Ω All-Knit ] ── [ Ω Knit ]\nCourse 7~12 (Shift):  [ ∧ Tuck x5 ] ── [ Ω Knit ] ── [ ∧ Tuck x5 ]",
+        "w_shrink": 17.5, "l_shrink": 15.5, "fee": 0.55, "span_pct": 0.0,
+        "y1": ("CM 20s/1 (실린더 니트사)", 20.0, "Ne(면번수)", 30, 3.20, 3.35, 1.0, 100.0),
+        "y2": ("CM 20s/1 (다이얼 니트사)", 20.0, "Ne(면번수)", 15, 3.20, 3.35, 1.0, 100.0),
+        "y3": ("CM 20s/1 (12조 연속 터크사)", 20.0, "Ne(면번수)", 15, 2.75, 3.35, 1.0, 100.0),
+        "y4": ("미사용", 20.0, "Denier(데니어)", 0, 2.80, 6.80, 3.0, 100.0),
+    },
+    "CVC 30s/Poly 75D 올터크 담보루 (All-Tuck Cardigan Cushion)": {
+        "pattern": "Double Jersey All-Tuck (Full Cardigan / Polka Rib)",
+        "struct": "양면 인터록/1x1립 (200% 침수)",
+        "desc": "다이얼과 실린더 양면에서 매 코스 번갈아 올터크(All-Tuck)를 걸어 원단 내부에 공기층(쿠션감)과 볼륨을 극대화한 담보루 조직",
+        "inch": 30, "gauge": 24, "feeds": 72, "rpm": 17, "type": "Double", "needle_mult": 2.0,
+        "wpi": 30, "cpi": 38, "sl": 3.15, "draft": 1.0,
+        "cam": "Feed 1: Cylinder All-Knit + Dial All-Tuck / Feed 2: Cylinder All-Tuck + Dial All-Knit",
+        "needle": "Rib Gating 2-Track (양면 200% 침수 풀 가동 - 벌키성 극대화)",
+        "seq": "홀수 피더: CVC 30s / 짝수 피더: Poly DTY 75D 에어쿠션 터크 급사",
+        "diagram": "Feed 1 (Odd):   Cyl [ Ω Knit ] ── Dial [ ∧ All-Tuck ] ── Cyl [ Ω Knit ]\nFeed 2 (Even):  Cyl [ ∧ All-Tuck ] ── Dial [ Ω Knit ] ── Cyl [ ∧ All-Tuck ]",
+        "w_shrink": 16.5, "l_shrink": 13.5, "fee": 0.52, "span_pct": 0.0,
+        "y1": ("CVC 30s/1 (실린더 메인)", 30.0, "Ne(면번수)", 36, 3.15, 3.40, 1.0, 100.0),
+        "y2": ("CVC 30s/1 (다이얼 메인)", 30.0, "Ne(면번수)", 18, 3.15, 3.40, 1.0, 100.0),
+        "y3": ("Poly DTY 75D (올터크 볼륨사)", 75.0, "Denier(데니어)", 18, 2.90, 1.95, 1.0, 100.0),
+        "y4": ("미사용", 20.0, "Denier(데니어)", 0, 2.80, 6.80, 3.0, 100.0),
+    },
+    "CM 20s 2x2 립 스판 (2x2 Rib Knit - 시보리/몸판)": {
+        "pattern": "2x2 Rib (Needle-Out 66.7% Gating)",
+        "struct": "2x2 립 (바늘 빼기 66.7% 가동)",
+        "desc": "다이얼 2침·실린더 2침 교차 편성 및 1침 발침(Needle-out)으로 가로 방향 복원력과 골지 입체감을 극대화한 2x2 립",
+        "inch": 30, "gauge": 18, "feeds": 60, "rpm": 17, "type": "Double", "needle_mult": 1.333,
+        "wpi": 26, "cpi": 36, "sl": 3.25, "draft": 3.0,
+        "cam": "Cylinder & Dial [2 Knit - 1 Needle Out] 동시 편성",
+        "needle": "다이얼/실린더 각 2본 가동 + 1본 발침(Needle-out) ➔ 실가동 침수 66.7%",
+        "seq": "전 피더 CM 20s/1 + Spandex 30D 플레이팅 급사",
+        "diagram": "Dial Needles:      [ Ω Knit ][ Ω Knit ] ( ──Out── ) [ Ω Knit ][ Ω Knit ]\nCylinder Needles:  ( ──Out── ) [ Ω Knit ][ Ω Knit ] ( ──Out── )",
+        "w_shrink": 18.0, "l_shrink": 11.0, "fee": 0.48, "span_pct": 4.9,
+        "y1": ("CM 20s/1 (실린더/다이얼)", 20.0, "Ne(면번수)", 60, 3.25, 3.30, 1.0, 100.0),
+        "y2": ("미사용", 20.0, "Ne(면번수)", 0, 3.00, 3.10, 1.0, 100.0),
+        "y3": ("미사용", 20.0, "Ne(면번수)", 0, 2.00, 3.10, 1.0, 100.0),
+        "y4": ("Spandex 30D (스판1)", 30.0, "Denier(데니어)", 60, 3.25, 6.50, 3.0, 100.0),
+    },
+    "CM 30s 싱글 피케 (Single Lacoste Pique)": {
+        "pattern": "4-Track Single Pique (Knit + Staggered Tuck)",
+        "struct": "싱글 변형 (표준 100% 침수)",
+        "desc": "2코스 평니트 후 홀수침·짝수침 교차 터크(Tuck)로 표면에 다이아몬드 벌집 공극을 형성하는 폴로 피케 조직",
+        "inch": 30, "gauge": 24, "feeds": 72, "rpm": 19, "type": "Single", "needle_mult": 1.0,
+        "wpi": 32, "cpi": 44, "sl": 2.95, "draft": 1.0,
+        "cam": "Feed 1,2: All Knit / Feed 3: 홀수침 Tuck / Feed 4: 짝수침 Tuck",
+        "needle": "4-Track (1-2-1-2 벌집 요철 형성용 바늘 배열)",
+        "seq": "전 피더 CM 30s/1 급사 (터크 피더 장력 -10% 이완 세팅)",
+        "diagram": "Feed 1,2 (Base):   [ Ω Knit ] ── [ Ω Knit ] ── [ Ω Knit ] ── [ Ω Knit ]\nFeed 3 (Odd Tuck): [ ∧ Tuck ] ── [ Ω Knit ] ── [ ∧ Tuck ] ── [ Ω Knit ]\nFeed 4 (Even Tuck):[ Ω Knit ] ── [ ∧ Tuck ] ── [ Ω Knit ] ── [ ∧ Tuck ]",
+        "w_shrink": 15.0, "l_shrink": 12.0, "fee": 0.42, "span_pct": 0.0,
+        "y1": ("CM 30s/1 (니트 코어사)", 30.0, "Ne(면번수)", 36, 2.95, 3.60, 1.0, 100.0),
+        "y2": ("미사용", 20.0, "Ne(면번수)", 0, 3.00, 3.10, 1.0, 100.0),
+        "y3": ("CM 30s/1 (터크 요철사)", 30.0, "Ne(면번수)", 36, 2.45, 3.60, 1.0, 100.0),
+        "y4": ("미사용", 20.0, "Denier(데니어)", 0, 2.80, 6.80, 3.0, 100.0),
+    },
+    "Poly 75D/Span 40D 고밀도 인터록 (Interlock 32G)": {
+        "pattern": "1x1 Interlock (Double Jersey Cross Gating 200%)",
+        "struct": "양면 인터록/1x1립 (200% 침수)",
+        "desc": "다이얼과 실린더 장침·단침이 서로 마주 보며 1:1 교차 편성되어 앞뒷면이 모두 매끈하고 밀도가 극대화된 양면 인터록",
+        "inch": 32, "gauge": 32, "feeds": 96, "rpm": 19, "type": "Double", "needle_mult": 2.0,
+        "wpi": 46, "cpi": 62, "sl": 2.45, "draft": 3.2,
+        "cam": "Cylinder & Dial 1:1 Cross Gating (Long/Short Needle 교차 구동)",
+        "needle": "Dial 2-Track + Cylinder 2-Track (양면 200% 풀 침수 가동)",
+        "seq": "전 피더 DTY 75D/72F + Spandex 40D 양면 동시 급사",
+        "diagram": "Feed 1 (Long Needles):  Cyl [ Ω ] ── (Miss) ── Dial [ Ω ] ── (Miss)\nFeed 2 (Short Needles): (Miss) ── Cyl [ Ω ] ── (Miss) ── Dial [ Ω ]",
+        "w_shrink": 9.0, "l_shrink": 8.0, "fee": 0.58, "span_pct": 8.4,
+        "y1": ("Poly DTY 75D (실린더)", 75.0, "Denier(데니어)", 48, 2.45, 1.95, 1.0, 100.0),
+        "y2": ("Poly DTY 75D (다이얼)", 75.0, "Denier(데니어)", 48, 2.45, 1.95, 1.0, 100.0),
+        "y3": ("미사용 (터크사)", 75.0, "Denier(데니어)", 0, 2.00, 1.95, 1.0, 100.0),
+        "y4": ("Spandex 40D (스판1)", 40.0, "Denier(데니어)", 96, 2.45, 6.20, 3.2, 100.0),
+    }
+}
+
+def analyze_swatch_pixels_expert(front_img_file, back_img_file):
+    """업로드된 앞/뒷면 스와치 픽셀의 가로/세로 주파수, 명암비, 다공도를 분석하여 8대 조직 중 하나로 자동 규정"""
     try:
         img_f = Image.open(front_img_file).convert("L").resize((256, 256))
         arr_f = np.array(img_f, dtype=np.float32)
@@ -217,35 +481,66 @@ def analyze_swatch_pixels(front_img_file, back_img_file):
         grad_x = float(np.mean(np.abs(np.diff(arr_f, axis=1))))
         grad_y = float(np.mean(np.abs(np.diff(arr_f, axis=0))))
         porosity = float(np.mean((arr_f < 45) | (arr_f > 215)) * 100.0)
+
+        back_diff = 0.0
+        if back_img_file is not None:
+            img_b = Image.open(back_img_file).convert("L").resize((256, 256))
+            arr_b = np.array(img_b, dtype=np.float32)
+            back_diff = abs(float(np.std(arr_b)) - contrast)
+
         est_wpi = int(np.clip(26 + grad_x * 0.85, 22, 52))
         est_cpi = int(np.clip(34 + grad_y * 1.05, 28, 68))
+
+        # 전문가 비전 판별 트리
+        if contrast > 54.0 and grad_y > 17.5:
+            detected_key = "CM 20s 12조 터크 와플 (12-Course Tuck Waffle)"
+        elif contrast > 44.0 and porosity > 17.0:
+            detected_key = "CVC 30s/Poly 75D 올터크 담보루 (All-Tuck Cardigan Cushion)"
+        elif grad_x > 21.0 and grad_x > grad_y * 1.15:
+            detected_key = "CM 20s 2x2 립 스판 (2x2 Rib Knit - 시보리/몸판)"
+        elif porosity > 13.5 and contrast > 38.0:
+            detected_key = "CM 30s 싱글 피케 (Single Lacoste Pique)"
+        elif back_diff > 10.0 and porosity < 11.5:
+            detected_key = "Cotton 20s/30s/10s 3단 헤비 쭈리 (3-Thread Heavy Fleece)"
+        elif back_diff > 5.0 or (32.0 <= contrast <= 44.0 and grad_y >= 14.0):
+            detected_key = "Cotton 30s/20s 2단 터크 미니 쭈리 (French Terry)"
+        elif contrast < 24.0 and grad_x < 12.0:
+            detected_key = "Poly 75D/Span 40D 고밀도 인터록 (Interlock 32G)"
+        else:
+            detected_key = "CVC 30s 싱글 스판 저지 (Single Span Jersey)"
+
         return {
             "analyzed": True,
+            "detected_key": detected_key,
             "contrast": round(contrast, 1),
             "porosity": round(porosity, 1),
+            "grad_x": round(grad_x, 1),
+            "grad_y": round(grad_y, 1),
             "est_wpi": est_wpi,
-            "est_cpi": est_cpi,
-            "texture_index": round((grad_x + grad_y) / 2.0, 2)
+            "est_cpi": est_cpi
         }
     except Exception:
-        return {"analyzed": False}
+        return {
+            "analyzed": False,
+            "detected_key": "CVC 30s 싱글 스판 저지 (Single Span Jersey)"
+        }
 
 # ==============================================================================
-# 4. 좌측 사이드바 (종료 공지 + 실시간 접속자 + 영구 채팅룸 + 네비게이션)
+# 4. 좌측 사이드바 (종료 공지 + 실시간 접속자 + 접이식 채팅창 + 6단계 세분화 네비게이션)
 # ==============================================================================
 with st.sidebar:
     st.markdown('<div class="notice-badge">🚨 10/24 서비스 종료 예정</div>', unsafe_allow_html=True)
     st.markdown("## ⚡ 구동현-TEX AI")
-    st.caption("Steve Jobs Simplicity × 99.9% Physics")
-    st.markdown(f'<div class="live-badge">🟢 실시간 접속 실무자: {live_users}명 (무료 세션)</div>', unsafe_allow_html=True)
-    
-    # 닉네임 수정 가능한 접이식 라이브 CS 채팅실
+    st.caption("Argon Physics × 6-Stage Pipeline OS")
+    st.markdown(f'<div class="live-badge">🟢 실시간 접속 실무자: {live_users}명 (무료)</div>', unsafe_allow_html=True)
+
+    # 접이식 영구 보존 라이브 채팅실 (닉네임 수정 가능)
     with st.expander("💬 A/S 라이브 CS 실시간 채팅실 열기"):
         chat_container = st.container()
         with chat_container:
             chat_html = "<div class='as-chat-box'>"
             if not global_chat_messages:
-                chat_html += "<div style='color: #94A3B8; text-align: center;'>등록된 메시지가 없습니다. 첫 대화를 시작해보세요!</div>"
+                chat_html += "<div style='color: #CBD5E1; text-align: center;'>등록된 메시지가 없습니다. 첫 대화를 시작해보세요!</div>"
             else:
                 for msg in global_chat_messages:
                     chat_html += f"<div style='margin-bottom:6px;'><b>{msg['sender']}</b>: {msg['text']}</div>"
@@ -253,8 +548,8 @@ with st.sidebar:
             st.markdown(chat_html, unsafe_allow_html=True)
 
         with st.form(key="as_chat_form", clear_on_submit=True):
-            user_sender = st.text_input("닉네임", value=st.session_state.user_nickname)
-            user_msg = st.text_input("CS/AS 문의 입력...", placeholder="메시지 입력...", label_visibility="collapsed")
+            user_sender = st.text_input("닉네임 (수정 가능)", value=st.session_state.user_nickname)
+            user_msg = st.text_input("메시지", placeholder="메시지 입력...", label_visibility="collapsed")
             submitted = st.form_submit_button("전송 🚀", use_container_width=True)
             if submitted and user_msg.strip():
                 st.session_state.user_nickname = user_sender.strip() if user_sender.strip() else "익명 실무자"
@@ -262,15 +557,16 @@ with st.sidebar:
                 st.rerun()
 
     st.write("---")
-
     st.markdown("### 🧭 공정 파이프라인 네비게이션")
     selected_module = st.radio(
-        "모듈 이동",
+        "공정 이동",
         [
-            "1) 사진을 통한 원단분석",
-            "2) 편직 혼용률 생산량",
-            "3) 납기 원가 관제탑",
-            "4) 야드/롤 변환기"
+            "1) 스와치 사진 분석 & AI 조직규정",
+            "2) 5-사종 혼용률 & 재고 구출",
+            "3) 염색 바치 & 텐터 열고정",
+            "4) 화학가공 · 콤팩터 · 검단",
+            "5) 납기 원가 관제탑 & 불량레이더",
+            "6) 야드/롤 변환 & 물류 최적화"
         ],
         label_visibility="collapsed"
     )
@@ -278,7 +574,7 @@ with st.sidebar:
     st.write("---")
     st.markdown("#### 📌 실시간 파이프라인 동기화 스펙")
     st.info(
-        f"• **원단:** {st.session_state.fabric_name}\n\n"
+        f"• **규정 원단:** {st.session_state.fabric_name}\n\n"
         f"• **설비:** {st.session_state.rec_inch}\" × {st.session_state.rec_gauge}G ({st.session_state.rec_feeds}F)\n\n"
         f"• **가공지 타겟:** {st.session_state.target_width}\" / {st.session_state.target_gsm} GSM\n\n"
         f"• **오더 수량:** {st.session_state.order_kg:,.0f} kg\n\n"
@@ -286,24 +582,25 @@ with st.sidebar:
     )
 
 # ==============================================================================
-# 5. 상단 헤더 & 사용설명서 (데모 버전 뱃지 표기 포함)
+# 5. 상단 헤더 (DEMO VERSION 배지) & 사용설명서
 # ==============================================================================
 h_c1, h_c2 = st.columns([3.2, 1])
 with h_c1:
-    st.markdown("# ⚡ 구동현-TEX AI : 원단 역설계 및 전 공정 원가·품질 관제 OS <span class='demo-badge'>DEMO VERSION</span>", unsafe_allow_html=True)
+    st.markdown("# ⚡ 구동현-TEX AI : 전 공정 통합 관제 OS <span class='demo-badge'>DEMO VERSION</span>", unsafe_allow_html=True)
 with h_c2:
     st.markdown(f"<div style='text-align:right; padding-top:16px;'><span class='live-badge'>🟢 LIVE 접속자: {live_users}명 Online</span></div>", unsafe_allow_html=True)
 
-with st.expander("📖 [사용설명서] 스티브 잡스식 3초 퀵 가이드 & 스와치 분석률 99.9% 달성 4대 촬영 프로토콜"):
+with st.expander("📖 [사용설명서] 6대 공정 파이프라인 가이드 & 스와치 비전 분석률 99.9% 달성 4대 촬영 프로토콜"):
     g1, g2 = st.columns(2)
     with g1:
         st.markdown("""
-        #### 🚀 스티브 잡스식 3초 퀵 가이드 (Simple is Best)
-        * **원칙:** 복잡한 35개 엔지니어링 변수는 백엔드와 `[⚙️ 전문가 세부 보정 서랍]` 속으로 숨겼습니다.
-        * **Step 1 (원단분석):** 스와치 앞/뒷면 사진을 올리고 `원클릭 역설계 & 전 공정 자동 기입` 버튼을 누릅니다.
-        * **Step 2 (혼용률/생산량):** 자동 완성된 5-사종 도넛 차트와 하단 **% 텍스트 명세**를 확인합니다. (세부 수정 시에만 전문가 서랍 오픈)
-        * **Step 3 (원가/관제탑):** 1초 만에 산출된 **가공지 단가($/kg, $/yd)**, **케틀 바치 경고**, **신호등 불량 레이더**를 확인하고 견적서를 뽑습니다.
-        * **Step 4 (야드/롤 변환):** 물류 출고용 야드/롤 수량, 광폭 마카 손익, 컨테이너 적재 롤 수를 확정합니다.
+        #### 🚀 6대 공정 파이프라인 핵심 가이드
+        * **1) 스와치 사진 분석 & AI 조직규정:** 수동 선택 없이 앞/뒷면 사진을 올리면 AI가 **RIB, 12조 터크 와플, 올터크 담보루, 미니쭈리, 3단쭈리** 등을 자동 규정하고 **실시간 편직 조직도**와 **6대 임원 결재 리포트**를 생성합니다.
+        * **2) 5-사종 혼용률 & 재고 구출:** 스판 플레이팅 계수(0.70)가 반영된 5-사종 도넛 차트, 하단 % 텍스트 명세, 악성 재고 원사 현금화 구출기를 제공합니다.
+        * **3) 염색 바치 & 텐터 열고정:** 케틀 용량 매칭, 미니멈 차지 벌금 방어, 텐터 챔버 온도·오버피드·속도를 제어합니다.
+        * **4) 화학가공 · 콤팩터 · 검단:** 실리콘 유연제 픽업 처방, 콤팩터 수축률 제어, 팬톤 랩딥 레시피 및 4-Point 검단을 수행합니다.
+        * **5) 납기 원가 관제탑 & 불량레이더:** 풀 파이프라인 단가($/kg, $/yd), 4대 공정 신호등 불량 레이더, 원사 스왑 네고 및 영문 견적서(CBD)를 출력합니다.
+        * **6) 야드/롤 변환 & 물류 최적화:** 야드/롤 환산, 34인치 광폭 마카 손익, 컨테이너 CBM 적재 시뮬레이션을 확정합니다.
         """)
     with g2:
         st.markdown("""
@@ -317,13 +614,13 @@ with st.expander("📖 [사용설명서] 스티브 잡스식 3초 퀵 가이드 
 st.write("---")
 
 # ==============================================================================
-# MODULE 1: 사진을 통한 원단분석 (심플 Hero 입력 + 실제 픽셀 분석 + 6대 결재 리포트)
+# MODULE 1: 스와치 사진 분석 & AI 전문가 조직 자동 규정 (카테고리 수동 선택란 제거 + 조직도 포함)
 # ==============================================================================
-if selected_module == "1) 사진을 통한 원단분석":
-    st.subheader("🔍 1) 사진을 통한 원단분석 (AI Vision 역설계 & 설비 가용성 판정)")
+if selected_module == "1) 스와치 사진 분석 & AI 조직규정":
+    st.subheader("🔍 1) 스와치 사진 분석 & AI 원단 전문가 조직 자동 규정 (실시간 조직도 탑재)")
 
     st.markdown('<div class="hero-card">', unsafe_allow_html=True)
-    u1, u2, u3 = st.columns([1, 1, 1.3])
+    u1, u2, u3 = st.columns([1, 1, 1.35])
     with u1:
         front_img = st.file_uploader("📸 1. 스와치 [앞면(Face)] 업로드", type=["jpg", "jpeg", "png"])
         if front_img:
@@ -333,17 +630,37 @@ if selected_module == "1) 사진을 통한 원단분석":
         if back_img:
             st.image(back_img, caption="뒷면(Back) 픽셀 스캔 완료", use_container_width=True)
     with u3:
-        st.markdown("##### ⚡ 3. 핵심 타겟 스펙 3초 입력")
-        preset_type = st.selectbox(
-            "원단 베이스 조직 카테고리",
-            [
-                "CVC 30s 싱글 스판 저지 (Single Span)",
-                "Cotton 30s/20s 2단 터크 미니 쭈리 (French Terry)",
-                "CM 30s 싱글 피케 (Single Pique - Knit & 터크)",
-                "CM 20s 2x2 립 스판 (2x2 Rib - 바늘빼기 예외적용)",
-                "Poly 75D/Span 40D 고밀도 인터록 (Interlock 32G)"
-            ]
+        st.markdown("##### ⚡ 3. AI 비전 자동 조직 규정 & 타겟 스펙 입력")
+
+        # AI 픽셀 분석 실행
+        ai_res = analyze_swatch_pixels_expert(front_img, back_img) if front_img else {
+            "analyzed": False,
+            "detected_key": st.session_state.fabric_name if st.session_state.fabric_name in STRUCTURE_DB else "CVC 30s 싱글 스판 저지 (Single Span Jersey)"
+        }
+
+        # 사진 미업로드 시에도 8대 전문 조직의 조직도/역설계를 즉시 테스트할 수 있도록 전문가 오버라이드 옵션 제공
+        override_options = ["🤖 AI 비전 자동 판독 (권장 - 사진 픽셀 기반 자동 규정)"] + list(STRUCTURE_DB.keys())
+        expert_override = st.selectbox(
+            "🔬 AI 전문가 판독 모드 (사진 업로드 시 자동 분석 / 수동 시뮬레이션 전환 가능)",
+            override_options,
+            index=0
         )
+
+        active_struct_key = ai_res["detected_key"] if expert_override.startswith("🤖") else expert_override
+        p = STRUCTURE_DB[active_struct_key].copy()
+        p["name"] = active_struct_key
+
+        # AI 정밀 조직 규정 결과 & 실시간 편직 조직도 박스
+        st.markdown(f"""
+        <div class="structure-box">
+            <span style="color: #00F2FE; font-weight: 800; font-size: 1.05rem;">🔬 AI 원단 전문가 정밀 조직 규정 결과</span><br>
+            • <b>규정 조직명:</b> <span style="color: #38BDF8; font-weight: 800; font-size: 1.02rem;">{p['name']}</span><br>
+            • <b>엔지니어링 구조:</b> {p['pattern']} ({p['struct']})<br>
+            • <b>전문가 판독 소견:</b> {p['desc']}
+            <div class="diagram-pre"><b>[실시간 편직 조직도 (Knitting Cam & Loop Diagram)]</b>\n{p['diagram']}</div>
+        </div>
+        """, unsafe_allow_html=True)
+
         c_in1, c_in2, c_in3 = st.columns(3)
         with c_in1:
             in_gsm = st.number_input("목표 가공지 중량(GSM)", value=float(st.session_state.target_gsm), step=5.0)
@@ -363,89 +680,24 @@ if selected_module == "1) 사진을 통한 원단분석":
         )
     st.markdown('</div>', unsafe_allow_html=True)
 
-    pixel_res = analyze_swatch_pixels(front_img, back_img) if front_img else {"analyzed": False}
     origin_shrink_mod = 2.5 if "인도산" in yarn_origin_sel else (-1.5 if "컴팩트" in yarn_origin_sel else (1.0 if "리사이클" in yarn_origin_sel else 0.0))
+    w_shrink_final = p["w_shrink"] + origin_shrink_mod
+    l_shrink_final = p["l_shrink"] + origin_shrink_mod
 
-    if "싱글 스판" in preset_type:
-        p = {
-            "name": "CVC 30s 싱글 스판 저지", "pattern": "Single Jersey (1-Track All Knit)", "struct": "싱글 저지 (표준 100% 침수)",
-            "inch": 30, "gauge": 28, "feeds": 90, "rpm": 22, "type": "Single", "needle_mult": 1.0,
-            "wpi": 38, "cpi": 52, "sl": 2.82, "draft": 3.1,
-            "cam": "Feed 1~90: All Knit (Single Cam) + Spandex Plating (보정계수 0.70)",
-            "needle": "1-Track High Butt Needles (실린더 100% 가동)",
-            "seq": "전 피더 CVC 30s/1 + Spandex 20D 전 피더 플레이팅",
-            "w_shrink": 12.0 + origin_shrink_mod, "l_shrink": 10.5 + origin_shrink_mod, "fee": 0.35, "span_pct": 5.1,
-            "y1": ("CVC 30s/1 (전면사)", 30.0, "Ne(면번수)", 90, 2.82, 3.40, 1.0, 100.0),
-            "y2": ("미사용 (이면사)", 20.0, "Ne(면번수)", 0, 3.50, 3.10, 1.0, 100.0),
-            "y3": ("미사용 (터크사)", 30.0, "Ne(면번수)", 0, 2.00, 3.30, 1.0, 100.0),
-            "y4": ("Spandex 20D (스판1)", 20.0, "Denier(데니어)", 90, 2.82, 6.80, 3.1, 100.0),
-        }
-    elif "미니 쭈리" in preset_type:
-        p = {
-            "name": "Cotton 30s/20s 2단 터크 미니 쭈리", "pattern": "2-Thread French Terry (Knit + 터크)", "struct": "싱글 변형 (표준 100% 침수)",
-            "inch": 30, "gauge": 24, "feeds": 72, "rpm": 18, "type": "Fleece", "needle_mult": 1.0,
-            "wpi": 30, "cpi": 40, "sl": 3.05, "draft": 3.0,
-            "cam": "홀수 Feed: All Knit (Face) / 짝수 Feed: [1 터크(Tuck) - 1 Miss] 교차 배열",
-            "needle": "2-Track (High/Low Butt 1:1 교차 배열 - 터크 루프 바인딩)",
-            "seq": "홀수 피더: CM 30s + 20D OP / 짝수 피더: CM 20s 이면 루프사",
-            "w_shrink": 14.5 + origin_shrink_mod, "l_shrink": 13.0 + origin_shrink_mod, "fee": 0.45, "span_pct": 3.8,
-            "y1": ("CM 30s/1 (전면사)", 30.0, "Ne(면번수)", 36, 3.05, 3.60, 1.0, 100.0),
-            "y2": ("CM 20s/1 (이면 루프사)", 20.0, "Ne(면번수)", 18, 4.20, 3.15, 1.0, 100.0),
-            "y3": ("CM 30s/1 (터크 결합사)", 30.0, "Ne(면번수)", 18, 2.15, 3.60, 1.0, 100.0),
-            "y4": ("Spandex 20D (스판1)", 20.0, "Denier(데니어)", 36, 3.05, 6.80, 3.0, 100.0),
-        }
-    elif "피케" in preset_type:
-        p = {
-            "name": "CM 30s 싱글 피케 (Single Pique)", "pattern": "4-Track Pique (Knit + 터크 벌집조직)", "struct": "싱글 변형 (표준 100% 침수)",
-            "inch": 30, "gauge": 24, "feeds": 72, "rpm": 19, "type": "Single", "needle_mult": 1.0,
-            "wpi": 32, "cpi": 44, "sl": 2.95, "draft": 1.0,
-            "cam": "Feed 1,2: All Knit / Feed 3: 홀수침 터크(Tuck) / Feed 4: 짝수침 터크(Tuck)",
-            "needle": "4-Track (1-2-1-2 벌집 요철 형성용 바늘 배열)",
-            "seq": "전 피더 CM 30s/1 급사 (터크 피더 장력 -10% 이완 세팅)",
-            "w_shrink": 15.0 + origin_shrink_mod, "l_shrink": 12.0 + origin_shrink_mod, "fee": 0.42, "span_pct": 0.0,
-            "y1": ("CM 30s/1 (니트 코어사)", 30.0, "Ne(면번수)", 36, 2.95, 3.60, 1.0, 100.0),
-            "y2": ("미사용", 20.0, "Ne(면번수)", 0, 3.00, 3.10, 1.0, 100.0),
-            "y3": ("CM 30s/1 (터크 요철사)", 30.0, "Ne(면번수)", 36, 2.45, 3.60, 1.0, 100.0),
-            "y4": ("미사용", 20.0, "Denier(데니어)", 0, 2.80, 6.80, 3.0, 100.0),
-        }
-    elif "2x2 립" in preset_type:
-        p = {
-            "name": "CM 20s 2x2 립 스판 (시보리/몸판용)", "pattern": "2x2 Rib (Needle-Out 66.7% Gating)", "struct": "2x2 립 (바늘 빼기 66.7% 가동)",
-            "inch": 30, "gauge": 18, "feeds": 60, "rpm": 17, "type": "Double", "needle_mult": 1.333,
-            "wpi": 26, "cpi": 36, "sl": 3.25, "draft": 3.0,
-            "cam": "Cylinder & Dial 2 Knit - 1 Needle Out 동시 편성",
-            "needle": "다이얼/실린더 각 2본 가동 + 1본 발침(Needle-out) ➔ 실가동 침수 66.7%",
-            "seq": "전 피더 CM 20s/1 + Spandex 30D 플레이팅 급사",
-            "w_shrink": 18.0 + origin_shrink_mod, "l_shrink": 11.0 + origin_shrink_mod, "fee": 0.48, "span_pct": 4.9,
-            "y1": ("CM 20s/1 (실린더/다이얼)", 20.0, "Ne(면번수)", 60, 3.25, 3.30, 1.0, 100.0),
-            "y2": ("미사용", 20.0, "Ne(면번수)", 0, 3.00, 3.10, 1.0, 100.0),
-            "y3": ("미사용", 20.0, "Ne(면번수)", 0, 2.00, 3.10, 1.0, 100.0),
-            "y4": ("Spandex 30D (스판1)", 30.0, "Denier(데니어)", 60, 3.25, 6.50, 3.0, 100.0),
-        }
-    else:
-        p = {
-            "name": "Poly 75D/Span 40D 하이게이지 인터록", "pattern": "1x1 Interlock (Double Jersey 200%)", "struct": "양면 인터록/1x1립 (200% 침수)",
-            "inch": 32, "gauge": 32, "feeds": 96, "rpm": 19, "type": "Double", "needle_mult": 2.0,
-            "wpi": 46, "cpi": 62, "sl": 2.45, "draft": 3.2,
-            "cam": "Cylinder & Dial 1:1 Cross Gating (Long/Short Needle 교차 구동)",
-            "needle": "Dial 2-Track + Cylinder 2-Track (양면 200% 풀 침수 가동)",
-            "seq": "전 피더 DTY 75D/72F + Spandex 40D 양면 동시 급사",
-            "w_shrink": 9.0 + origin_shrink_mod, "l_shrink": 8.0 + origin_shrink_mod, "fee": 0.58, "span_pct": 8.4,
-            "y1": ("Poly DTY 75D (실린더)", 75.0, "Denier(데니어)", 48, 2.45, 1.95, 1.0, 100.0),
-            "y2": ("Poly DTY 75D (다이얼)", 75.0, "Denier(데니어)", 48, 2.45, 1.95, 1.0, 100.0),
-            "y3": ("미사용 (터크사)", 75.0, "Denier(데니어)", 0, 2.00, 1.95, 1.0, 100.0),
-            "y4": ("Spandex 40D (스판1)", 40.0, "Denier(데니어)", 96, 2.45, 6.20, 3.2, 100.0),
-        }
-
-    if pixel_res["analyzed"]:
-        p["wpi"] = pixel_res["est_wpi"]
-        p["cpi"] = pixel_res["est_cpi"]
+    if ai_res["analyzed"]:
+        p["wpi"] = ai_res["est_wpi"]
+        p["cpi"] = ai_res["est_cpi"]
+        st.info(
+            f"🔬 **[실제 업로드 스와치 픽셀 스캔 완료]** "
+            f"표면 명암비(Contrast): `{ai_res['contrast']}` | 루프/터크 다공도(Porosity): `{ai_res['porosity']}%` | "
+            f"실측 밀도: `{ai_res['est_wpi']} WPI × {ai_res['est_cpi']} CPI` ➔ **{p['name']}** 규정 완료!"
+        )
 
     base_cyl_needles = int(round(math.pi * p["inch"] * p["gauge"]))
     active_needles = int(round(base_cyl_needles * p["needle_mult"]))
 
-    greige_width = round(in_width / (1.0 - p["w_shrink"] / 100.0), 1)
-    greige_gsm = round(in_gsm * (1.0 - (p["l_shrink"] - p["w_shrink"]) / 100.0) * 0.94, 1)
+    greige_width = round(in_width / (1.0 - w_shrink_final / 100.0), 1)
+    greige_gsm = round(in_gsm * (1.0 - (l_shrink_final - w_shrink_final) / 100.0) * 0.94, 1)
 
     main_tex = to_tex(p["y1"][1], p["y1"][2])
     tf_val = round(math.sqrt(main_tex) / (p["sl"] / 10.0), 2)
@@ -454,7 +706,7 @@ if selected_module == "1) 사진을 통한 원단분석":
     daily_prod_kg = round((rev_weight_g * p["rpm"] * 60 * 24 * 0.85) / 1000.0, 1)
     knit_days = round(in_order_kg / max(daily_prod_kg, 1), 1)
 
-    if st.button("🚀 원클릭 AI 스와치 역설계 확정 & 전 공정(모듈 2·3·4) 자동 기입", type="primary", use_container_width=True):
+    if st.button("🚀 원클릭 AI 스와치 역설계 확정 & 전 공정(모듈 2~6) 데이터 자동 동기화", type="primary", use_container_width=True):
         st.session_state.fabric_name = p["name"]
         st.session_state.pattern_type = p["pattern"]
         st.session_state.struct_mode = p["struct"]
@@ -471,6 +723,8 @@ if selected_module == "1) 사진을 통한 원단분석":
         st.session_state.calc_daily_kg = daily_prod_kg
         st.session_state.calc_tf = tf_val
         st.session_state.calc_span_pct = p["span_pct"]
+        st.session_state.w_shrink_Shared = w_shrink_final
+        st.session_state.l_shrink_Shared = l_shrink_final
 
         for idx, key_prefix in enumerate(["y1", "y2", "y3", "y4"], start=1):
             tup = p[key_prefix]
@@ -483,21 +737,16 @@ if selected_module == "1) 사진을 통한 원단분석":
             st.session_state[f"y{idx}_draft"] = tup[6]
             st.session_state[f"y{idx}_share"] = tup[7]
 
-        st.success("✅ 스와치 역설계 및 전 공정(모듈 2·3·4) 데이터 100% 자동 기입 완료!")
+        st.success(f"✅ [{p['name']}] 역설계 확정 및 전 공정(모듈 2~6) 데이터 100% 자동 동기화 완료!")
 
-    if pixel_res["analyzed"]:
-        st.info(
-            f"🔬 **[실제 업로드 이미지 픽셀 스캔 완료]** "
-            f"표면 명암비(Contrast): `{pixel_res['contrast']}` | 루프 투과/터크 다공도(Porosity): `{pixel_res['porosity']}%` | "
-            f"실측 스캔 밀도: `{pixel_res['est_wpi']} WPI × {pixel_res['est_cpi']} CPI`"
-        )
-
+    # 핵심 4대 결론 KPI 카드
     k1, k2, k3, k4 = st.columns(4)
     k1.metric("추천 설비 / 실가동 총침수", f"{p['inch']}\" × {p['gauge']}G", f"실가동 {active_needles:,}침 ({p['struct'].split('(')[0]})")
-    k2.metric("편직실 지시 생지 타겟", f"폭 {greige_width}\" / {greige_gsm} GSM", f"가공 축률 폭 -{p['w_shrink']:.1f}% 반영")
+    k2.metric("편직실 지시 생지 타겟", f"폭 {greige_width}\" / {greige_gsm} GSM", f"가공 축률 폭 -{w_shrink_final:.1f}% 반영")
     k3.metric("1대당 일일 생산량 (85%)", f"{daily_prod_kg} kg / 일", f"{in_order_kg:,.0f}kg 편직 시 {knit_days}일 소요")
     k4.metric("밀도계수 (Tightness Factor)", f"TF {tf_val}", "안정" if 1.28 <= tf_val <= 1.62 else "수축/파공 주의")
 
+    # 편직 임원 결재급 6대 정밀 리포트
     st.markdown("### 📋 편직 임원·부장·팀장 결재급 6대 정밀 역설계 명세서")
     rc1, rc2, rc3 = st.columns(3)
     with rc1:
@@ -513,7 +762,7 @@ if selected_module == "1) 사진을 통한 원단분석":
             <div class="neon-title">④ 생지(Greige) ↔ 가공지(Finished) 역학</div>
             • <b>바이어 요구 가공지:</b> 폭 {in_width}" / 중량 {in_gsm} GSM<br>
             • <b>요구 생지(Greige) 스펙:</b> 폭 <b>{greige_width}"</b> / 중량 <b>{greige_gsm} GSM</b><br>
-            • <b>산지 반영 예상 축률:</b> 폭 -{p['w_shrink']:.1f}% / 길이 -{p['l_shrink']:.1f}%
+            • <b>산지 반영 예상 축률:</b> 폭 -{w_shrink_final:.1f}% / 길이 -{l_shrink_final:.1f}%
         </div>
         """, unsafe_allow_html=True)
     with rc2:
@@ -521,7 +770,7 @@ if selected_module == "1) 사진을 통한 원단분석":
         <div class="glass-card">
             <div class="neon-title">② 편직 조직도 (캠 세팅 · 바늘 배열 · 급사)</div>
             • <b>판독 조직명:</b> {p['pattern']}<br>
-            • <b>캠 세팅(Knit/터크/Miss):</b> {p['cam']}<br>
+            • <b>캠 세팅(Knit/Tuck/Miss):</b> {p['cam']}<br>
             • <b>바늘 배열(Needle Layout):</b> {p['needle']}<br>
             • <b>원사 급사 시퀀스:</b> {p['seq']}
         </div>
@@ -567,35 +816,34 @@ if selected_module == "1) 사진을 통한 원단분석":
 
 
 # ==============================================================================
-# MODULE 2: 편직 혼용률 생산량 (도넛 차트 + % 텍스트 명세 + 5사종/후가공 서랍)
+# MODULE 2: 5-사종 혼용률 & 재고 구출
 # ==============================================================================
-elif selected_module == "2) 편직 혼용률 생산량":
-    st.subheader("⚙️ 2) 편직 혼용률 생산량 & 후공정(염색·텐터·검단) 정밀 제어")
+elif selected_module == "2) 5-사종 혼용률 & 재고 구출":
+    st.subheader("⚙️ 2) 5-사종 정밀 혼용률 제너레이터 & 창고 악성 재고 원사 구출기")
 
     st.markdown('<div class="hero-card">', unsafe_allow_html=True)
     top1, top2, top3, top4 = st.columns(4)
+    struct_options = [
+        "싱글 저지 (표준 100% 침수)",
+        "싱글 변형 (표준 100% 침수)",
+        "양면 인터록/1x1립 (200% 침수)",
+        "2x2 립 (바늘 빼기 66.7% 가동)",
+        "자카드 조직 (선택비 65% 가동)"
+    ]
+    default_struct_idx = struct_options.index(st.session_state.struct_mode) if st.session_state.struct_mode in struct_options else 0
     with top1:
-        struct_mode = st.selectbox(
-            "편직 바늘 구동 구조 (침수 예외 반영)",
-            [
-                "싱글 저지 (표준 100% 침수)",
-                "싱글 변형 (표준 100% 침수)",
-                "양면 인터록/1x1립 (200% 침수)",
-                "2x2 립 (바늘 빼기 66.7% 가동)",
-                "자카드 조직 (선택비 65% 가동)"
-            ],
-            index=0
-        )
+        struct_mode = st.selectbox("편직 바늘 구동 구조 (침수 예외 반영)", struct_options, index=default_struct_idx)
+        st.session_state.struct_mode = struct_mode
     with top2:
-        plating_factor = st.slider("스판덱스 플레이팅 보정계수 (현장 정밀값)", 0.60, 0.85, float(st.session_state.plating_factor), 0.02, help="스판덱스는 바늘에 코를 형성하지 않고 뒷면에 걸치므로 메인 루프장의 약 70%(0.70)만 실제 급사됩니다.")
+        plating_factor = st.slider("스판덱스 플레이팅 보정계수", 0.60, 0.85, float(st.session_state.plating_factor), 0.02)
         st.session_state.plating_factor = plating_factor
     with top3:
-        safety_loss_pct = st.slider("원사 안전 발주 로스율 (권사+초기세팅 %)", 1.0, 8.0, 3.5, 0.5)
+        safety_loss_pct = st.slider("원사 안전 발주 로스율 (%)", 1.0, 8.0, 3.5, 0.5)
     with top4:
         m_eff = st.slider("공장 실가동 효율 (%)", 65, 95, 85, 1)
     st.markdown('</div>', unsafe_allow_html=True)
 
-    with st.expander("🎛️ [전문가 세부 보정 모드] 5-사종 개별 스펙 및 단가라 비율 수동 조절 (클릭하여 열기)"):
+    with st.expander("🎛️ [전문가 세부 보정 서랍] 5-사종 개별 스펙 및 단가라 회전 점유율 수동 조절 (클릭하여 열기)"):
         mc1, mc2, mc3 = st.columns(3)
         with mc1:
             m_inch = st.number_input("기계 직경 (Inch)", value=int(st.session_state.rec_inch), step=2)
@@ -606,7 +854,7 @@ elif selected_module == "2) 편직 혼용률 생산량":
         st.session_state.rec_inch, st.session_state.rec_gauge, st.session_state.rec_rpm = m_inch, m_gauge, m_rpm
 
         st.markdown("---")
-        roles = ["사종 1 (전면사 Face)", "사종 2 (이면사 Back)", "사종 3 (터크사 Tuck)", "사종 4 (스판덱스 1)", "사종 5 (스판덱스 2)"]
+        roles = ["사종 1 (전면사 Face)", "사종 2 (이면사 Back)", "사종 3 (터크/결합사)", "사종 4 (스판덱스 1)", "사종 5 (스판덱스 2)"]
         y_cols = st.columns(5)
         for i in range(1, 6):
             with y_cols[i - 1]:
@@ -617,7 +865,7 @@ elif selected_module == "2) 편직 혼용률 생산량":
                 st.session_state[f"y{i}_feeds"] = st.number_input(f"급사 피더수 #{i}", value=int(st.session_state[f"y{i}_feeds"]), min_value=0, step=6)
                 st.session_state[f"y{i}_sl"] = st.number_input(f"루프장(mm/100침) #{i}", value=float(st.session_state[f"y{i}_sl"]), min_value=0.5, step=0.05)
                 st.session_state[f"y{i}_draft"] = st.number_input(f"드래프트율 #{i}", value=float(st.session_state[f"y{i}_draft"]), min_value=1.0, step=0.1)
-                st.session_state[f"y{i}_share"] = st.number_input(f"단가라 회전점유율(%) #{i}", value=float(st.session_state[f"y{i}_share"]), min_value=5.0, max_value=100.0, step=5.0)
+                st.session_state[f"y{i}_share"] = st.number_input(f"단가라 점유율(%) #{i}", value=float(st.session_state[f"y{i}_share"]), min_value=5.0, max_value=100.0, step=5.0)
                 st.session_state[f"y{i}_price"] = st.number_input(f"원사 단가($/kg) #{i}", value=float(st.session_state[f"y{i}_price"]), min_value=0.5, step=0.1)
 
     mult_map = {
@@ -657,7 +905,7 @@ elif selected_module == "2) 편직 혼용률 생산량":
     else:
         weighted_cost = 0.0
         span_sum = 0.0
-        text_Wait_lines = []
+        text_lines = []
 
         for y in yarn_list:
             pct = (y["w_rev_g"] / tot_rev_g) * 100.0
@@ -668,7 +916,7 @@ elif selected_module == "2) 편직 혼용률 생산량":
             if y["is_span"]:
                 span_sum += pct
             if y["feeds"] > 0:
-                text_Wait_lines.append(
+                text_lines.append(
                     f"• <b>[{y['slot']}] {y['name']}</b> ➔ <span style='color:#00F2FE; font-weight:800; font-size:1.08rem;'>{y['pct']:.1f}%</span> "
                     f"(순소요: {y['net_kg']:,.1f} kg | <b>안전발주 PO: {y['po_kg']:,.1f} kg</b>)"
                 )
@@ -692,14 +940,14 @@ elif selected_module == "2) 편직 혼용률 생산량":
                 title="📊 5-사종 정밀 투입 혼용률 (플레이팅 보정 완료)",
                 paper_bgcolor="rgba(0,0,0,0)",
                 plot_bgcolor="rgba(0,0,0,0)",
-                font=dict(color="#F8FAFC", size=13),
+                font=dict(color="#FFFFFF", size=13),
                 margin=dict(t=40, b=10, l=10, r=10),
                 height=310
             )
             st.plotly_chart(fig, use_container_width=True)
 
             st.markdown("##### 📝 사종별 정밀 혼용률(%) 및 안전 발주량 텍스트 명세")
-            st.markdown(f"<div class='yarn-summary-box'>{'<br>'.join(text_Wait_lines)}</div>", unsafe_allow_html=True)
+            st.markdown(f"<div class='yarn-summary-box'>{'<br>'.join(text_lines)}</div>", unsafe_allow_html=True)
 
         with c_right:
             m1, m2, m3 = st.columns(3)
@@ -726,53 +974,108 @@ elif selected_module == "2) 편직 혼용률 생산량":
                 saved_cash = round(dead_kg * target_y["price"], 0)
                 st.success(f"🏭 방치된 `{dead_sel}` **{dead_kg:,.0f}kg** 투입 시 현재 원단 **{max_fab_kg:,.1f}kg** 즉시 생산 가능 ➔ 매몰 원사비 **${saved_cash:,.0f}** 현금 구출!")
 
-    with st.expander("🧪 [후공정 엔지니어링 제어판] 텐터 열고정 · 화학 패딩 · 콤팩터 · 랩딥 1차 합격 · 색차(ΔE)/4-Point 검단 (클릭하여 열기)"):
-        ft1, ft2, ft3, ft4 = st.tabs(["🔥 텐터(Stenter) 제어", "💧 패딩 & 콤팩터", "🎨 랩딥 배합비 예측", "🔎 색차(ΔE) & 4-Point 검단"])
-        with ft1:
-            c1, c2, c3 = st.columns(3)
-            with c1:
-                chambers = st.number_input("텐터 챔버 수 (1챔버=3m)", value=8, min_value=4, max_value=12)
-                dwell_s = st.number_input("열고정 체류시간 (초)", value=42 if st.session_state.calc_span_pct > 0 else 30)
-            with c2:
-                overfeed = st.slider("오버피드율 (Overfeed %)", 0, 35, 18)
-                w_loss = st.slider("염색·텐터 폭 축률 (%)", 5, 22, 12)
-            with c3:
-                t_temp = 190 if st.session_state.calc_span_pct > 0 else 172
-                t_speed = round((chambers * 3.0) / (dwell_s / 60.0), 1)
-                st.metric("권장 챔버 온도 / 기계 속도", f"{t_temp}°C / {t_speed} m/min")
-                st.metric("역산 생지(Greige) 폭", f"{round(st.session_state.target_width / (1 - w_loss/100.0), 1)} Inch")
-        with ft2:
-            p1, p2, p3 = st.columns(3)
-            with p1:
-                pickup = st.slider("망글 Wet Pick-up율 (%)", 55, 85, 70)
-                sil_gl = st.number_input("실리콘 유연제 농도 (g/L)", value=float(st.session_state.silicone_g_l), step=5.0)
-                st.session_state.silicone_g_l = sil_gl
-            with p2:
-                pre_sh = st.number_input("텐터 후 잔여 길이 수축률 (%)", value=-6.5, step=0.5)
-                std_sh = st.number_input("바이어 합격 수축률 기준 (%)", value=-3.0, step=0.5)
-            with p3:
-                chem_kg = round(st.session_state.order_kg * (pickup / 100.0) * (sil_gl / 1000.0), 2)
-                comp_pct = round(abs(pre_sh - std_sh) * 1.25, 1)
-                st.metric("유연제 총 소요량", f"{chem_kg} kg")
-                st.metric("콤팩터 권장 압축률", f"+{comp_pct}%")
-        with ft3:
-            pantone = st.text_input("바이어 요구 팬톤 코드", value="19-4052 TCX (Classic Blue)")
-            st.info(f"🎯 **[{pantone}] 조건등색(D65/TL84) 오차 최소화 1차 합격 추천 레시피:**\n\n• Reactive Blue 19 (1.82% o.w.f) + Reactive Red 195 (0.14% o.w.f) / Disperse Blue 79 (1.45% o.w.f)")
-        with ft4:
-            q1, q2 = st.columns(2)
-            with q1:
-                de = st.number_input("측색기 실측 색차 (ΔE)", value=0.58, step=0.05)
-                st.metric("색차 판정", f"ΔE {de}", "PASS (0.8 이하)" if de <= 0.8 else "REJECT (재염 필요)")
-            with q2:
-                pts = st.number_input("100 Sq.Yd당 4-Point 감점 점수", value=14.5, step=1.0)
-                st.metric("검단 등급 판정", f"{pts} Points", "A-Grade 합격" if pts <= 20.0 else "B-Grade 불합격")
+
+# ==============================================================================
+# MODULE 3: 염색 바치 & 텐터 열고정
+# ==============================================================================
+elif selected_module == "3) 염색 바치 & 텐터 열고정":
+    st.subheader("🔥 3) 염색 케틀(Kettle) 바치 매칭 & 텐터(Stenter) 열고정 정밀 제어")
+
+    tc1, tc2 = st.columns(2)
+    with tc1:
+        st.markdown('<div class="hero-card">', unsafe_allow_html=True)
+        st.markdown("#### 💧 염색 케틀(Kettle) 바치 & 미니멈 차지 방어기")
+        kettle_options = [150, 300, 500, 1000]
+        k_idx = kettle_options.index(st.session_state.kettle_cap) if st.session_state.kettle_cap in kettle_options else 2
+        kettle_cap = st.selectbox("염색 케틀 1바치 용량 (kg)", kettle_options, index=k_idx)
+        st.session_state.kettle_cap = kettle_cap
+
+        order_q = st.session_state.order_kg
+        full_b = int(order_q // kettle_cap)
+        rem_k = order_q % kettle_cap
+        min_pen = round(250.0 / max(order_q, 1), 3) if (0 < rem_k < kettle_cap * 0.6) else 0.0
+
+        if min_pen > 0:
+            st.error(f"🚨 **[미니멈 차지 & 탕차이 경보]** 총 {order_q:,.0f}kg 발주 시 {kettle_cap}kg 케틀 {full_b}바치 후 **{rem_k:,.0f}kg 잔량** 발생! (미니멈 벌금 +${min_pen:.2f}/kg 합산됨) ➔ **{full_b*kettle_cap:,.0f}kg** 또는 **{(full_b+1)*kettle_cap:,.0f}kg**으로 수량 조정 강력 권장.")
+        else:
+            st.success(f"✅ **[케틀 바치 최적화]** {kettle_cap}kg 케틀 기준 미니멈 차지 및 바치 간 탕차이 리스크 없이 정상 소화 가능합니다.")
+
+        dye_path_opts = [
+            "단일 섬유 1욕 염색 (표준)",
+            "CVC/TC 1욕 연속 염색 (+$0.15/kg)",
+            "CVC/TC 2욕 분할 염색 (+$0.42/kg · +1.5일)"
+        ]
+        dye_path = st.selectbox("염색 욕(Bath) 경로", dye_path_opts, index=2 if "CVC" in st.session_state.fabric_name else 0)
+        st.session_state.dye_path = dye_path
+        st.metric("선택한 염색 경로 추가 원가", "+$0.42 / kg" if "2욕" in dye_path else ("+$0.15 / kg" if "1욕 연속" in dye_path else "$0.00 / kg"))
+        st.markdown('</div>', unsafe_allow_html=True)
+
+    with tc2:
+        st.markdown('<div class="hero-card">', unsafe_allow_html=True)
+        st.markdown("#### 🔥 텐터(Stenter) 열고정 & 체류시간 제어기")
+        chambers = st.number_input("텐터 챔버 수 (1챔버=3m)", value=8, min_value=4, max_value=12)
+        dwell_s = st.number_input("열고정 체류시간 (초, Dwell Time)", value=42 if st.session_state.calc_span_pct > 0 else 30)
+        overfeed = st.slider("텐터 핀 오버피드율 (Overfeed %)", 0, 35, 18)
+        w_loss = st.slider("염색·가공 폭 축률 (%)", 5, 22, int(round(st.session_state.w_shrink_Shared)))
+
+        t_temp = 190 if st.session_state.calc_span_pct > 0 else 172
+        t_speed = round((chambers * 3.0) / (dwell_s / 60.0), 1)
+        req_gw = round(st.session_state.target_width / (1.0 - w_loss / 100.0), 1)
+        st.metric("권장 챔버 온도 / 가동 속도", f"{t_temp}°C / {t_speed} m/min", f"오버피드 +{overfeed}% 적용")
+        st.metric("역산 생지(Greige) 폭 지시서", f"생지 폭 {req_gw} Inch", f"가공 목표폭 {st.session_state.target_width}\" 기준")
+        st.markdown('</div>', unsafe_allow_html=True)
 
 
 # ==============================================================================
-# MODULE 3: 납기 원가 관제탑 (잡스식 Hero 원가/납기 카드 + 케틀/네고/불량레이더)
+# MODULE 4: 화학가공 · 콤팩터 · 검단 (랩딥 레시피 및 4-Point 검단 통합)
 # ==============================================================================
-elif selected_module == "3) 납기 원가 관제탑":
-    st.subheader("🗼 3) 납기 원가 관제탑 & 공정별 예상 불량 신호등 레이더")
+elif selected_module == "4) 화학가공 · 콤팩터 · 검단":
+    st.subheader("💧 4) 화학 패딩(Pick-up), 콤팩터 수축 제어 & 랩딥 · 4-Point 품질 검단")
+
+    fc1, fc2 = st.columns(2)
+    with fc1:
+        st.markdown('<div class="hero-card">', unsafe_allow_html=True)
+        st.markdown("#### 🧪 화학 패딩(Pick-up) & 조제 원가 계산기")
+        pickup = st.slider("망글(Mangle) Wet Pick-up율 (%)", 55, 85, 70)
+        sil_gl = st.number_input("실리콘 유연제 처방 농도 (g/L)", value=float(st.session_state.silicone_g_l), step=5.0)
+        st.session_state.silicone_g_l = sil_gl
+        chem_kg = round(st.session_state.order_kg * (pickup / 100.0) * (sil_gl / 1000.0), 2)
+        chem_cost = round((chem_kg * 4.2) / max(st.session_state.order_kg, 1), 3)
+        st.metric("실리콘 유연제 총 소요량", f"{chem_kg} kg", f"조제 원가 +${chem_cost}/kg")
+        st.markdown('</div>', unsafe_allow_html=True)
+
+        st.markdown('<div class="glass-card">', unsafe_allow_html=True)
+        st.markdown("#### 🎨 바이어 랩딥(Lab-Dip) 1차 합격 배합비 예측기")
+        pantone = st.text_input("바이어 요구 팬톤 코드", value="19-4052 TCX (Classic Blue)")
+        st.info(f"🎯 **[{pantone}] 조건등색(D65/TL84) 오차 최소화 1차 합격 추천 레시피:**\n\n• Reactive Blue 19 (1.82% o.w.f) + Reactive Red 195 (0.14% o.w.f) / Disperse Blue 79 (1.45% o.w.f)")
+        st.markdown('</div>', unsafe_allow_html=True)
+
+    with fc2:
+        st.markdown('<div class="hero-card">', unsafe_allow_html=True)
+        st.markdown("#### ⚙️ 콤팩터(Compactor) 잔여 수축 통제기")
+        pre_sh = st.number_input("텐터 직후 잔여 길이 수축률 (%)", value=-6.5, step=0.5)
+        std_sh = st.number_input("바이어 합격 기준 수축률 (%)", value=-3.0, step=0.5)
+        comp_pct = round(abs(pre_sh - std_sh) * 1.25, 1)
+        st.metric("콤팩터 권장 압축 텐션", f"+{comp_pct}%", f"가공 후 중량 +{round(comp_pct*1.8, 1)} GSM 상승 효과")
+        st.markdown('</div>', unsafe_allow_html=True)
+
+        st.markdown('<div class="glass-card">', unsafe_allow_html=True)
+        st.markdown("#### 🔎 측색기 색차(ΔE) & 4-Point 원단 검단 판정기")
+        q1, q2 = st.columns(2)
+        with q1:
+            de = st.number_input("측색기 실측 색차 (ΔE)", value=0.58, step=0.05)
+            st.metric("색차 판정", f"ΔE {de}", "PASS (0.8 이하)" if de <= 0.8 else "REJECT (재염 필요)")
+        with q2:
+            pts = st.number_input("100 Sq.Yd당 4-Point 감점", value=14.5, step=1.0)
+            st.metric("검단 등급 판정", f"{pts} Points", "A-Grade 합격" if pts <= 20.0 else "B-Grade 불합격")
+        st.markdown('</div>', unsafe_allow_html=True)
+
+
+# ==============================================================================
+# MODULE 5: 납기 원가 관제탑 & 불량레이더 (스왑 네고 & 영문 CBD 다운로드 포함)
+# ==============================================================================
+elif selected_module == "5) 납기 원가 관제탑 & 불량레이더":
+    st.subheader("🗼 5) 납기 원가 관제탑 & 공정별 신호등 불량 레이더 · 영문 견적서(CBD)")
 
     st.markdown('<div class="hero-card">', unsafe_allow_html=True)
     b1, b2, b3, b4 = st.columns(4)
@@ -925,22 +1228,22 @@ elif selected_module == "3) 납기 원가 관제탑":
 
     with cbd_col:
         st.markdown("#### 📄 바이어 송부용 영문 견적서(CBD) & ESG 리포트")
-        cbd_doc = f"""[NEXUS-TEX AI OFFICIAL QUOTATION & CBD]
+        cbd_doc = f"""[구동현-TEX AI OFFICIAL QUOTATION & CBD]
 - Item: {st.session_state.fabric_name} ({st.session_state.struct_mode})
 - Spec: {st.session_state.target_width}" Width / {st.session_state.target_gsm} GSM (Finished)
 - Order Qty: {order_q:,.0f} kg ({order_q / max(kg_per_yd, 0.001):,.0f} yds)
 - Quoted Price: USD ${quote_price_kg:.2f} / kg (USD ${quote_price_yd:.2f} / yd)
 - Total Lead Time: {total_lead_days} Days (Dyeing {batch_hrs}h/Batch reflected)
 - ESG Carbon Saving: -46.5% CO2e available with GRS Recycled Yarn"""
-        st.download_button("📥 공식 영문 견적서(CBD) 다운로드 (.txt)", data=cbd_doc, file_name="NEXUS_TEX_CBD.txt", use_container_width=True)
+        st.download_button("📥 공식 영문 견적서(CBD) 다운로드 (.txt)", data=cbd_doc, file_name="KDH_TEX_CBD.txt", use_container_width=True)
         st.text_area("카톡/이메일 원클릭 복사용", cbd_doc, height=125)
 
 
 # ==============================================================================
-# MODULE 4: 야드/롤 변환기 (단위 변환 + 봉제 마카 손익 + 컨테이너 CBM 테트리스)
+# MODULE 6: 야드/롤 변환 & 물류 최적화
 # ==============================================================================
-elif selected_module == "4) 야드/롤 변환기":
-    st.subheader("📦 4) 초정밀 야드/롤 변환기 & 봉제 마카 손익 · 컨테이너 CBM 최적화")
+elif selected_module == "6) 야드/롤 변환 & 물류 최적화":
+    st.subheader("📦 6) 초정밀 야드/롤 변환기 & 광폭 봉제 마카 손익 · 컨테이너 CBM 테트리스")
 
     st.markdown('<div class="hero-card">', unsafe_allow_html=True)
     u1, u2, u3, u4 = st.columns(4)
@@ -970,7 +1273,7 @@ elif selected_module == "4) 야드/롤 변환기":
     col_m, col_c = st.columns(2)
 
     with col_m:
-        st.markdown("### ✂️ 봉제 요척(YY) 연동 마카(Marker) 손익 계산기")
+        st.markdown("### ✂️ 봉제 요척(YY) 연동 광폭 마카(Marker) 손익 계산기")
         g_pcs = st.number_input("의류 봉제 오더 수량 (Pcs, 장)", value=30000, step=5000)
         yy_yd = st.number_input("일반폭 기준 1장당 봉제 요척 (yd/pc)", value=1.15, step=0.05)
         eff_gain = st.slider("34인치 광폭 제직 시 마카 효율 상승률 (%)", 1.5, 7.0, 3.8, 0.2)
