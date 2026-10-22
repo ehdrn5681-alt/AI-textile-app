@@ -12,7 +12,7 @@ import random
 # 0. 페이지 설정 & 랜덤 닉네임 초기화
 # ==============================================================================
 st.set_page_config(
-    page_title="구동현-TEX AI v3.12 | Final Fix Edition",
+    page_title="구동현-TEX AI v3.13 | Dropdown Text Fix",
     page_icon="⚡",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -89,7 +89,7 @@ FACTORY_MACHINES = [
 ]
 
 # ==============================================================================
-# 2. UI 가시성 및 드롭다운/입력창 검은색 글씨 강제 CSS
+# 2. UI 가시성 및 드롭다운 팝업 내부 글씨 검은색 강제 CSS (정밀 보완)
 # ==============================================================================
 st.markdown("""
 <style>
@@ -124,10 +124,8 @@ st.markdown("""
         color: #FFFFFF !important;
     }
 
-    div[data-baseweb="select"] * {
-        color: #000000 !important;
-    }
-    div[data-baseweb="popover"] * {
+    /* 🔥 [완벽 보완] 셀렉트박스 팝업 내부의 모든 텍스트, 리스트 아이템 글씨를 검은색으로 고정 */
+    div[data-baseweb="select"] *, div[data-baseweb="popover"] *, ul[data-baseweb="menu"] li *, div[role="option"] * {
         color: #000000 !important;
     }
 
@@ -297,7 +295,7 @@ with st.sidebar:
     )
 
 # ==============================================================================
-# 5. 상단 헤더 (Markdown으로 타이틀 구현) & 사용설명서
+# 5. 상단 헤더 & 사용설명서
 # ==============================================================================
 h_c1, h_c2 = st.columns([3.2, 1])
 with h_c1:
